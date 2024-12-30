@@ -21,9 +21,9 @@ const measurementPointSchema: JSONSchemaType<AddMeasurementPoint> = {
         name: {
             type: 'string',
             nullable: false,
-            maxLength: 5,
+            minLength: 5,
             errorMessage: {
-                maxLength: `${VALIDATION_ERRORS.MIN_LENGTH} 5`,
+                minLength: `${VALIDATION_ERRORS.MIN_LENGTH} 5`,
                 type: `${VALIDATION_ERRORS.TYPE} String`,
             },
         },

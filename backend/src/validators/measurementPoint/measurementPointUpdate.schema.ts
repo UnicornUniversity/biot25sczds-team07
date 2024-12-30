@@ -22,9 +22,9 @@ const measurementPointUpdateSchema: JSONSchemaType<UpdateMeasurementPoint> = {
         name: {
             type: 'string',
             nullable: true,
-            maxLength: 5,
+            minLength: 5,
             errorMessage: {
-                maxLength: `${VALIDATION_ERRORS.MIN_LENGTH} 5`,
+                minLength: `${VALIDATION_ERRORS.MIN_LENGTH} 5`,
                 type: `${VALIDATION_ERRORS.TYPE} String`,
             },
         },
@@ -45,4 +45,4 @@ const measurementPointUpdateSchema: JSONSchemaType<UpdateMeasurementPoint> = {
     additionalProperties: false,
 };
 
-export const validateMeasurementPointAdd = ajv.compile(measurementPointUpdateSchema);
+export const validateMeasurementPointUpdate = ajv.compile(measurementPointUpdateSchema);

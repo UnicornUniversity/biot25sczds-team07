@@ -1,10 +1,11 @@
 import { ajv, JSONSchemaType, VALIDATION_ERRORS, } from "../../ajv-validation/ajvInstance"
 
-export interface MeasurementPointRemoveSchema {
+export interface DeleteMeasurementPoint {
+    organisationId: string,
     id: string,
 }
 
-const measurementPointRemoveSchema: JSONSchemaType<MeasurementPointRemoveSchema> = {
+const measurementPointRemoveSchema: JSONSchemaType<DeleteMeasurementPoint> = {
     type: 'object',
     properties: {
         id: {
@@ -14,8 +15,15 @@ const measurementPointRemoveSchema: JSONSchemaType<MeasurementPointRemoveSchema>
                 type: `${VALIDATION_ERRORS.FORMAT} ObjectId (Mongo)`,
             },
         },
+        organisationId: {
+            type: 'string',
+            format: 'objectId',
+            errorMessage: {
+                type: `${VALIDATION_ERRORS.FORMAT} ObjectId (Mongo)`,
+            },
+        },
     },
-    required: ['id'],
+    required: ['id', 'organisationId'],
     additionalProperties: false,
 };
 

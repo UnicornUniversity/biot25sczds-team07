@@ -25,6 +25,6 @@ export default class MeasurementPoint {
         public senzors: Senzor[],
         public createdEpoch: number,
         public updatedEpoch: number,
-        public id?: ObjectId
+        public _id?: ObjectId
     ) { }
 }

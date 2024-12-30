@@ -2,10 +2,10 @@ import { Response, NextFunction } from 'express';
 import { parseErrors } from '../../errors/ajvError';
 
 import { AuthorizationRequest } from '../../authorization/authorizeUser';
-import { AddMeasurementPoint, validateMeasurementPointAdd } from './measurementPointAdd.schema';
+import { UpdateMeasurementPoint, validateMeasurementPointUpdate } from './measurementPointUpdate.schema';
 
 export interface MeasurementPointUpdateRequest extends AuthorizationRequest {
-    body: AddMeasurementPoint
+    body: UpdateMeasurementPoint
 }
 
 export const measurementPointUpdateValidator = async (
@@ -13,9 +13,9 @@ export const measurementPointUpdateValidator = async (
     res: Response,
     next: NextFunction
 ) => {
-    const isValid = validateMeasurementPointAdd(req.body);
-    if (!isValid && validateMeasurementPointAdd.errors) { // If schema validation failed and error occured return with formatted error message 
-        const error = await parseErrors(validateMeasurementPointAdd.errors);
+    const isValid = validateMeasurementPointUpdate(req.body);
+    if (!isValid && validateMeasurementPointUpdate.errors) { // If schema validation failed and error occured return with formatted error message 
+        const error = await parseErrors(validateMeasurementPointUpdate.errors);
         res.status(400).json({ errorMap: { ...req.errorMap, ["invalidDtoIn"]: JSON.stringify(error) } });
         return;
     }

@@ -2,11 +2,11 @@ import { Response, NextFunction } from 'express';
 import { parseErrors } from '../../errors/ajvError';
 
 import { AuthorizationRequest } from '../../authorization/authorizeUser';
-import { validateMeasurementPointDelete } from './measurementPointDelete.schema';
+import { DeleteMeasurementPoint, validateMeasurementPointDelete } from './measurementPointDelete.schema';
 
-// export interface MeasurementPointDeleteRequest extends AuthorizationRequest {
-  
-// }
+export interface MeasurementPointDeleteRequest extends AuthorizationRequest {
+    body: DeleteMeasurementPoint,
+}
 
 export const measurementPointDeleteValidator = async (
     req: AuthorizationRequest,

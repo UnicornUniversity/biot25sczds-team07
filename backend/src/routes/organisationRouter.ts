@@ -2,10 +2,15 @@ import { NextFunction, Response, Router } from 'express';
 import dayjs from 'dayjs';
 import { ObjectId } from 'mongodb';
 
-import { authorizeUser } from '../authorization/authorizeUser';
+import { authorizeJWTToken } from '../authorization/authorizeUser';
 import { collections } from '../services/database.service';
+
+import Organisation, { OrganisationUser, Policy } from '../models/Organisation';
+
 import { OrganisationAddRequest, organisationAddValidator } from '../validators/organisation/organisationAdd.validator';
-import Organisation, { Policy } from '../models/Organisation';
+import { OrganisationDeleteRequest, organisationDeleteValidator } from '../validators/organisation/organisationDelete.validator';
+import { OrganisationUpdateRequest, organisationUpdateValidator } from '../validators/organisation/organisationUpdate.validator';
+import { OrganisationListRequest, organisationListValidator } from '../validators/organisation/organisationList.validator';
 
 
 const organisationRouter = Router();
@@ -13,7 +18,7 @@ const organisationRouter = Router();
 
 organisationRouter.post(
     "/add",
-    authorizeUser,
+    authorizeJWTToken,
     organisationAddValidator,
     async (req: OrganisationAddRequest, res: Response, next: NextFunction) => {
         req.errorMap = req.errorMap ?? {};
@@ -27,7 +32,7 @@ organisationRouter.post(
 
         try {
             const { name, description } = req.body;
-            const userId = req.user?.id ?? "";
+            const userId = req.userId ?? "";
 
             const epochNow = dayjs().unix();
 
@@ -44,18 +49,18 @@ organisationRouter.post(
             if (result.acknowledged) {
                 const createdOrganisation = await collections.organisations.findOne(
                     { _id: result.insertedId },
-                    {
-                        projection: {
-                            _id: 0, // Exclude the original _id field
-                            id: "$_id", // Include the _id field as id
-                            name: 1,
-                            description: 1,
-                            users: 1,
-                            bucketToken: 1,
-                            createdEpoch: 0,
-                            updatedEpoch: 0,
-                        },
-                    }
+                    // {
+                    //     projection: {
+                    //         _id: 0, // Exclude the original _id field
+                    //         id: "$_id", // Include the _id field as id
+                    //         name: 1,
+                    //         description: 1,
+                    //         users: 1,
+                    //         bucketToken: 1,
+                    //         createdEpoch: 0,
+                    //         updatedEpoch: 0,
+                    //     },
+                    // }
                 );
                 if (createdOrganisation) {
                     res.status(201).json({ ...createdOrganisation, errorMap: req.errorMap });
@@ -77,13 +82,13 @@ organisationRouter.post(
     }
 );
 organisationRouter.post(
-    "/removeFromList",
-    authorizeUser,
-    itemRemoveFromListValidator,
-    async (req: ItemRemoveFromListRequest, res: Response, next: NextFunction) => {
+    "/delete",
+    authorizeJWTToken,
+    organisationDeleteValidator,
+    async (req: OrganisationDeleteRequest, res: Response, next: NextFunction) => {
         req.errorMap = req.errorMap ?? {};
-        if (!collections.items || !collections.shoppingLists) {
-            console.warn("DB Collection items has not been initilized: ");
+        if (!collections.organisations || !collections.measurementPoints) {
+            console.warn("DB Collection Organisations or MeasuementPoints has not been initilized: ");
             const errorMap = req.errorMap ?? {};
             errorMap["500"] = "DB is not in correct state";
             res.status(500).json(req.errorMap);
@@ -91,26 +96,26 @@ organisationRouter.post(
         }
 
         try {
-            const listId = req.body.listId;
-            const userId = req.user?.id ?? "";
+            const organisationId = req.body.id;
+            const userId = req.userId ?? "";
 
-            const shoppingList = await collections.shoppingLists.findOne({
-                _id: new ObjectId(listId),
-                $or: [
-                    { ownerId: userId }, // Check if the user is the owner of the list
-                    { membersIdList: userId }
-                ],
+            const deletedResult = await collections.organisations.deleteOne({
+                _id: new ObjectId(organisationId),
+                users: {
+                    $elemMatch: {
+                        id: userId,
+                        policy: Policy.Admin
+                    }
+                }
             });
-            if (!shoppingList) {
-                res.status(404).json({ errorMap: { ...req.errorMap, ["404"]: `Shopping list with this id: ${listId} doesn't exist.` } });
+            if (deletedResult.deletedCount < 1) {
+                res.status(404).json({ errorMap: { ...req.errorMap, ["404"]: `Organisation with this id: ${organisationId} doesn't exist.` } });
                 return;
-            }
-
-            const result = await collections.items.deleteOne({ _id: new ObjectId(req.body.id) });
-            if (result.acknowledged && result.deletedCount > 0) {
+            } else if (deletedResult.acknowledged && deletedResult.deletedCount > 0) {
+                const deletedMeasurementPoints = await collections.measurementPoints.deleteMany({
+                    organisationId,
+                });
                 res.status(202).json({ errorMap: req.errorMap });
-            } else if (result.deletedCount < 1) {
-                res.status(404).json({ errorMap: { ...req.errorMap, ["404"]: `Item with this id: ${req.body.id} doesn't exists` } });
             } else {
                 res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: "Delete operation failed" } });
             }
@@ -127,61 +132,66 @@ organisationRouter.post(
 );
 organisationRouter.post(
     "/update",
-    authorizeUser,
-    itemUpdateValidator,
-    async (req: ItemUpdateRequest, res: Response, next: NextFunction) => {
+    authorizeJWTToken,
+    organisationUpdateValidator,
+    async (req: OrganisationUpdateRequest, res: Response, next: NextFunction) => {
         req.errorMap = req.errorMap ?? {};
-        if (!collections.items || !collections.shoppingLists) {
-            console.warn("DB Collection items has not been initilized: ");
-            const errorMap = req.errorMap ?? {};
-            errorMap["500"] = "DB is not in correct state";
+        if (!collections.organisations || !collections.users) {
+            console.warn("DB Collection Organisations or Users has not been initilized: ");
+            req.errorMap["500"] = "DB is not in correct state";
             res.status(500).json(req.errorMap);
             return;
         }
 
         try {
-            const listId = req.body.listId;
-            const userId = req.user?.id ?? "";
-
-            const shoppingList = await collections.shoppingLists.findOne({
-                _id: new ObjectId(listId),
-                $or: [
-                    { ownerId: userId }, // Check if the user is the owner of the list
-                    { membersIdList: userId }
-                ],
-            });
-            if (!shoppingList) {
-                res.status(404).json({ errorMap: { ...req.errorMap, ["404"]: `Shopping list with this id: ${listId} doesn't exist.` } });
-                return;
-            }
-
-            const { id, name, amount, completed } = req.body
-
+            const { id, name, description, users } = req.body;
+            const userId = req.userId ?? "";
 
             // Define the update fields
             const updateFields: {
                 updatedEpoch: number,
                 name?: string,
-                amount?: number,
-                completed?: boolean
+                description?: string,
+                users?: OrganisationUser[],
             } = { updatedEpoch: dayjs().unix() };
-            if (name) { updateFields.name = name; }
-            if (typeof amount == "number") { updateFields.amount = amount; }
-            if (typeof completed === "boolean") { updateFields.completed = completed; }
+            if (typeof name === "string") { updateFields.name = name; }
+            if (typeof description === "string") { updateFields.description = description }
+            if (users) {
+                const userIds = users.map(user => new ObjectId(user.id));
+                const usersThatExist = await collections.users.find({
+                    _id: { $in: userIds }
+                }).toArray();
 
-            const result = await collections.items.updateOne(
-                { _id: new ObjectId(req.body.id) },
+                if (usersThatExist.length !== userIds.length) {
+                    const nonExistingUsers = userIds.filter((id) => !usersThatExist.some((user) => user._id));
+                    req.errorMap["400"] = `Invalid users - there are IDs for users that doesnt exists in the DB: ${nonExistingUsers.join(", ")}`;
+                    res.status(400).json(req.errorMap);
+                    return;
+                }
+                updateFields.users = users;
+            }
+
+            const result = await collections.organisations.updateOne(
+                {
+                    _id: new ObjectId(req.body.id),
+                    users: {
+                        $elemMatch: {
+                            id: userId,
+                            policy: Policy.Admin
+                        }
+                    }
+                },
                 { $set: updateFields }
             );
-            if (result.matchedCount === 0) {
-                res.status(404).json({ errorMap: { ...req.errorMap, ["404"]: `There is no such Item with id: ${id}` } });
+            if (result.matchedCount < 1) {
+                res.status(404).json({ errorMap: { ...req.errorMap, ["404"]: `There is no such Organisation with id: ${id}` } });
                 return;
             }
-            const updatedItem = await collections.items.findOne({ _id: new ObjectId(id) });
-            if (updatedItem) {
-                res.status(200).json({ ...updatedItem, errorMap: req.errorMap });
+            const updatedOrganisation = await collections.organisations.findOne({ _id: new ObjectId(id) });
+            if (updatedOrganisation) {
+                res.status(200).json({ ...updatedOrganisation, errorMap: req.errorMap });
             } else {
-                res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: "Failed to fetch the updated Item" } });
+                res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: "Failed to fetch the updated Organisation" } });
             }
         } catch (error) {
             if (error instanceof Error) {
@@ -194,14 +204,59 @@ organisationRouter.post(
         }
     }
 );
-organisationRouter.post(
-    "/getAllInList",
-    authorizeUser,
-    itemGetAllInListValidator,
-    async (req: ItemGetAllInListRequest, res: Response, next: NextFunction) => {
+
+organisationRouter.get(
+    "/get:id",
+    authorizeJWTToken,
+    async (req: OrganisationListRequest, res: Response, next: NextFunction) => {
         req.errorMap = req.errorMap ?? {};
-        if (!collections.items || !collections.shoppingLists) {
-            console.warn("DB Collection items has not been initilized: ");
+        if (!collections.organisations) {
+            console.warn("DB Collection Organisations has not been initilized: ");
+            const errorMap = req.errorMap ?? {};
+            errorMap["500"] = "DB is not in correct state";
+            res.status(500).json(req.errorMap);
+            return;
+        }
+
+        const organisationId = req?.params?.id;
+        const userId = req.userId ?? "";
+        const query = {
+            _id: new ObjectId(organisationId),
+            users: {
+                $elemMatch: {
+                    id: userId,
+                }
+            }
+        }
+
+        try {
+
+            const organisation = await collections.organisations.findOne(query);
+            if (organisation) {
+                res.status(200).json({ ...organisation, errorMap: req.errorMap });
+            } else {
+                res.status(404).json({ errorMap: { ...req.errorMap, ["404"]: `Unable to find matching Organisation with id: ${organisationId}` } });
+            }
+        } catch (error) {
+            if (error instanceof Error) {
+                console.error(error.message);
+                res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: error.message } });
+            } else {
+                console.error("An unknown error occurred", error);
+                res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: "An unknown error occurred" } });
+            }
+        }
+    }
+)
+
+organisationRouter.post(
+    "/list",
+    authorizeJWTToken,
+    organisationListValidator,
+    async (req: OrganisationListRequest, res: Response, next: NextFunction) => {
+        req.errorMap = req.errorMap ?? {};
+        if (!collections.organisations) {
+            console.warn("DB Collection Organisations has not been initilized: ");
             const errorMap = req.errorMap ?? {};
             errorMap["500"] = "DB is not in correct state";
             res.status(500).json(req.errorMap);
@@ -209,33 +264,17 @@ organisationRouter.post(
         }
 
         try {
-            const listId = req.body.listId;
-            const userId = req.user?.id ?? "";
-
-            const shoppingList = await collections.shoppingLists.findOne({
-                _id: new ObjectId(listId),
-                $or: [
-                    { ownerId: userId }, // Check if the user is the owner of the list
-                    { membersIdList: userId }
-                ],
-            });
-            if (!shoppingList) {
-                res.status(404).json({ errorMap: { ...req.errorMap, ["404"]: `Shopping list with this id: ${listId} doesn't exist.` } });
-                return;
-            }
-
-            const { amount, completed, order, pageInfo = { pageIndex: 0, pageSize: 10 } } = req.body;
+            const { pageInfo = { pageIndex: 0, pageSize: 20 }, order = "asc" } = req.body;
+            const userId = req.userId ?? "";
 
             const queryFilter = [
                 // Match documents based on the filtering conditions
                 {
-                    $match: {
-                        $and: [
-                            { listId: listId },
-                            (typeof completed === "boolean") ? { completed: completed } : {},
-                            (typeof amount === "number") ? { amount: { $gte: amount } } : {},
-                        ],
-                    },
+                    users: {
+                        $elemMatch: {
+                            id: userId,
+                        }
+                    }
                 },
                 {
                     $facet: {
@@ -248,14 +287,14 @@ organisationRouter.post(
                     },
                 },
             ];
-            const items = await collections.items.aggregate(queryFilter).toArray();
-            const totalCount = items[0]?.totalCount[0]?.count || 0; // Total count of matching documents
-            const paginatedResults = items[0]?.paginatedResults || []; // Paginated results
+            const organisations = await collections.organisations.aggregate(queryFilter).toArray();
+            const totalCount = organisations[0]?.totalCount[0]?.count || 0; // Total count of matching documents
+            const paginatedResults = organisations[0]?.paginatedResults || []; // Paginated results
 
             if (Array.isArray(paginatedResults)) {
-                res.status(200).json({ items: paginatedResults, pageInfo: { ...pageInfo, total: totalCount } });
+                res.status(200).json({ organisations: paginatedResults, pageInfo: { ...pageInfo, total: totalCount } });
             } else {
-                res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: "Failed to fetch the items" } });
+                res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: "Failed to fetch the organisations" } });
             }
         } catch (error) {
             if (error instanceof Error) {

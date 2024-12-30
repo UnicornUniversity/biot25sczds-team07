@@ -17,6 +17,6 @@ export default class Organisation {
         public bucketToken: string,
         public createdEpoch: number,
         public updatedEpoch: number,
-        public id?: ObjectId
+        public _id?: ObjectId
     ) { }
 }

@@ -1,20 +1,47 @@
 import { NextFunction, Response } from 'express';
-import jwt, { JwtPayload } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 
 import { Request } from 'express';
-import { ErrorMap, User } from '../types/customTypes';
+import { ErrorMap } from '../types/customTypes';
 
+export const generateToken = (user: { id: string }) => {
+    const secretToken = process.env.ACCESS_TOKEN_SECRET;
+    if (!secretToken) {
+        throw new Error("Internal server error: Secret token not found");
+    }
+
+    const token = jwt.sign(
+        user,
+        secretToken,
+        { expiresIn: '3h' } // Token expires in 1 hour
+    );
+
+    return token;
+};
+
+
+export const verifyToken = async (token: string) => {
+    const secretToken = process.env.ACCESS_TOKEN_SECRET;
+    if (!secretToken) { return 500; }
+
+    try {
+        const result = jwt.verify(token, secretToken);
+        console.log("verifyToken - result: ", String(result))
+        if (typeof result === "string") {
+            return 403;
+        }
+        return result.id as string;
+    } catch (err) {
+        console.error("verifyToken - error: ", err);
+        return 403;
+    }
+}
 
 export interface AuthorizationRequest extends Request {
-    user?: User;
-    errorMap?: ErrorMap
+    userId?: string,
+    errorMap?: ErrorMap,
 }
-
-const isJwtPayload = (payload: string | JwtPayload): payload is JwtPayload => {
-    return (payload as JwtPayload).id !== undefined;
-}
-
-export const authorizeUser = async (
+export const authorizeJWTToken = async (
     req: AuthorizationRequest,
     res: Response,
     next: NextFunction
@@ -27,35 +54,16 @@ export const authorizeUser = async (
         return;
     }
 
-    const secretToken = process.env.ACCESS_TOKEN_SECRET;
-    if (!secretToken) {
+    const verifiedUser = await verifyToken(token);
+    if (verifiedUser === 500) {
         res.sendStatus(500).json("Internal server errror");
         return;
     }
-
-    jwt.verify(token, secretToken, (err, user) => {
-        if (!user) {
-            res.sendStatus(403);
-            return;
-        }
-
-        if (isJwtPayload(user)) {
-            if (user.role === "public") {
-                res.sendStatus(403);
-                return;
-            }
-            const userObject = {
-                id: user.id,
-                role: user.role,
-                policies: user.policies // Assuming the token contains user policies
-            };
-            req.user = userObject; // Attach the user object to the request
-            req.errorMap = {};
-            next();
-            return;
-        }
-
-        res.sendStatus(403); // Forbidden if token is invalid
+    if (verifiedUser === 403) {
+        res.sendStatus(403)
         return;
-    });
+    }
+
+    req.userId = verifiedUser;
+    next();
 };

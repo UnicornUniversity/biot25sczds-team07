@@ -1,10 +1,10 @@
 import { Response, NextFunction } from 'express';
 import { parseErrors } from '../../errors/ajvError';
-import { ListDeleteSchema, validateOrganisationDelete } from './organisationDelete.schema';
+import { OrganisationDeleteSchema, validateOrganisationDelete } from './organisationDelete.schema';
 import { AuthorizationRequest } from '../../authorization/authorizeUser';
 
-export interface DeleteListRequest extends AuthorizationRequest {
-    body: ListDeleteSchema
+export interface OrganisationDeleteRequest extends AuthorizationRequest {
+    body: OrganisationDeleteSchema
 }
 
 export const organisationDeleteValidator = async (

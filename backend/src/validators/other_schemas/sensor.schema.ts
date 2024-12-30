@@ -7,6 +7,12 @@ import { Senzor } from "../../models/MeasurementPoint";
 const sensorSchema: JSONSchemaType<Senzor> = {
     type: 'object',
     properties: {
+        sensorId: {
+            type: 'string',
+            errorMessage: {
+                type: `${VALIDATION_ERRORS.TYPE} String`
+            }
+        },
         name: {
             type: 'string',
             maxLength: 5,
@@ -22,12 +28,6 @@ const sensorSchema: JSONSchemaType<Senzor> = {
             errorMessage: {
                 enum: `${VALIDATION_ERRORS.PATTERN} "temperature" or "acceleration"`,
                 maxLength: `${VALIDATION_ERRORS.MAX_LENGTH} 100`,
-                type: `${VALIDATION_ERRORS.TYPE} String`
-            }
-        },
-        sensorId: {
-            type: 'string',
-            errorMessage: {
                 type: `${VALIDATION_ERRORS.TYPE} String`
             }
         },
@@ -60,7 +60,7 @@ const sensorSchema: JSONSchemaType<Senzor> = {
         },
 
     },
-    required: ['name', 'quantity', 'sensorId', 'config'],
+    required: ['sensorId', 'name', 'quantity', 'config'],
     additionalProperties: false,
 };
 

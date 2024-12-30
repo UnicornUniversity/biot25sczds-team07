@@ -1,9 +1,10 @@
 import { ajv, JSONSchemaType, VALIDATION_ERRORS, } from "../../ajv-validation/ajvInstance"
-export interface OrganisationDeleteSchema {
+
+export interface DeleteUser {
     id: string,
 }
 
-const organisationDeleteSchema: JSONSchemaType<OrganisationDeleteSchema> = {
+const userDeleteSchema: JSONSchemaType<DeleteUser> = {
     type: 'object',
     properties: {
         id: {
@@ -18,4 +19,4 @@ const organisationDeleteSchema: JSONSchemaType<OrganisationDeleteSchema> = {
     additionalProperties: false,
 };
 
-export const validateOrganisationDelete = ajv.compile(organisationDeleteSchema);
+export const validateUserDelete = ajv.compile(userDeleteSchema);
