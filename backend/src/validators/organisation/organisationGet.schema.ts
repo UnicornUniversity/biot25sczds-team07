@@ -12,7 +12,8 @@ const organisationGetSchema: JSONSchemaType<OrganisationGetSchema> = {
             type: 'string',
             format: 'objectId',
             errorMessage: {
-                type: `${VALIDATION_ERRORS.FORMAT} ObjectId (Mongo)`,
+                type: `${VALIDATION_ERRORS.TYPE} String`,
+                format: `${VALIDATION_ERRORS.FORMAT} ObjectId (Mongo)`,
             },
         },
     },

@@ -11,6 +11,7 @@ import { OrganisationAddRequest, organisationAddValidator } from '../validators/
 import { OrganisationDeleteRequest, organisationDeleteValidator } from '../validators/organisation/organisationDelete.validator';
 import { OrganisationUpdateRequest, organisationUpdateValidator } from '../validators/organisation/organisationUpdate.validator';
 import { OrganisationListRequest, organisationListValidator } from '../validators/organisation/organisationList.validator';
+import { isUserAdmin, validateUserHasAdminAccessToOrg } from '../helpers/helpers';
 
 
 const organisationRouter = Router();
@@ -99,6 +100,16 @@ organisationRouter.post(
             const organisationId = req.body.id;
             const userId = req.userId ?? "";
 
+            const userHasAccess = await validateUserHasAdminAccessToOrg(userId, organisationId);
+            if (userHasAccess.code === 500 || userHasAccess.code === 404) {
+                const isAppAdmin = await isUserAdmin(userId);
+                if (!isAppAdmin) {
+                    req.errorMap[userHasAccess.code] = userHasAccess.message;
+                    res.status(userHasAccess.code).json({ errorMap: req.errorMap });
+                    return;
+                }
+            }
+
             const deletedResult = await collections.organisations.deleteOne({
                 _id: new ObjectId(organisationId),
                 users: {
@@ -147,6 +158,16 @@ organisationRouter.post(
             const { id, name, description, users } = req.body;
             const userId = req.userId ?? "";
 
+            const userHasAccess = await validateUserHasAdminAccessToOrg(userId, id);
+            if (userHasAccess.code === 500 || userHasAccess.code === 404) {
+                const isAppAdmin = await isUserAdmin(userId);
+                if (!isAppAdmin) {
+                    req.errorMap[userHasAccess.code] = userHasAccess.message;
+                    res.status(userHasAccess.code).json({ errorMap: req.errorMap });
+                    return;
+                }
+            }
+
             // Define the update fields
             const updateFields: {
                 updatedEpoch: number,
@@ -163,7 +184,7 @@ organisationRouter.post(
                 }).toArray();
 
                 if (usersThatExist.length !== userIds.length) {
-                    const nonExistingUsers = userIds.filter((id) => !usersThatExist.some((user) => user._id));
+                    const nonExistingUsers = userIds.filter((id) => !usersThatExist.some((user) => user._id === id));
                     req.errorMap["400"] = `Invalid users - there are IDs for users that doesnt exists in the DB: ${nonExistingUsers.join(", ")}`;
                     res.status(400).json(req.errorMap);
                     return;

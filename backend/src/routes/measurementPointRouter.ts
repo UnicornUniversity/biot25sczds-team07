@@ -5,7 +5,7 @@ import { ObjectId } from "mongodb";
 import { collections } from "../services/database.service";
 
 import { AuthorizationRequest, authorizeJWTToken } from '../authorization/authorizeUser';
-import { validateUserHasAdminAccessToOrg } from '../helpers/helpers';
+import { isUserAdmin, validateUserHasAdminAccessToOrg } from '../helpers/helpers';
 import MeasurementPoint from '../models/MeasurementPoint';
 import { Senzor } from '../models/MeasurementPoint';
 
@@ -34,9 +34,12 @@ measurementPointRouter.post(
         try {
             const userHasAccess = await validateUserHasAdminAccessToOrg(userId, organisationId);
             if (userHasAccess.code === 500 || userHasAccess.code === 404) {
-                req.errorMap[userHasAccess.code] = userHasAccess.message;
-                res.status(userHasAccess.code).json({ errorMap: req.errorMap });
-                return;
+                const isAppAdmin = await isUserAdmin(userId);
+                if (!isAppAdmin) {
+                    req.errorMap[userHasAccess.code] = userHasAccess.message;
+                    res.status(userHasAccess.code).json({ errorMap: req.errorMap });
+                    return;
+                }
             }
 
             const newMeasurementPoint = {
@@ -88,9 +91,12 @@ measurementPointRouter.post(
         try {
             const userHasAccess = await validateUserHasAdminAccessToOrg(userId, organisationId);
             if (userHasAccess.code === 500 || userHasAccess.code === 404) {
-                req.errorMap[userHasAccess.code] = userHasAccess.message;
-                res.status(userHasAccess.code).json({ errorMap: req.errorMap });
-                return;
+                const isAppAdmin = await isUserAdmin(userId);
+                if (!isAppAdmin) {
+                    req.errorMap[userHasAccess.code] = userHasAccess.message;
+                    res.status(userHasAccess.code).json({ errorMap: req.errorMap });
+                    return;
+                }
             }
 
             const result = await collections.measurementPoints.deleteOne({ _id: new ObjectId(id) });
@@ -260,9 +266,12 @@ measurementPointRouter.post(
 
             const userHasAccess = await validateUserHasAdminAccessToOrg(userId, measurementPoint.organisationId);
             if (userHasAccess.code === 500 || userHasAccess.code === 404) {
-                req.errorMap[userHasAccess.code] = userHasAccess.message;
-                res.status(userHasAccess.code).json({ errorMap: req.errorMap });
-                return;
+                const isAppAdmin = await isUserAdmin(userId);
+                if (!isAppAdmin) {
+                    req.errorMap[userHasAccess.code] = userHasAccess.message;
+                    res.status(userHasAccess.code).json({ errorMap: req.errorMap });
+                    return;
+                }
             }
 
             // Define the update fields
@@ -276,7 +285,14 @@ measurementPointRouter.post(
                     res.status(400).json({ erroMap: req.errorMap });
                     return;
                 }
-                updateFields.senzors = senzors;
+                updateFields.senzors = senzors.map((sen) => {
+                    const oldSensor: Senzor | undefined = measurementPoint.senzors.find((odlSen: Senzor) => odlSen.sensorId === sen.sensorId)
+                    if (!oldSensor) { return sen; }
+                    return {
+                        ...sen,
+                        config: (sen.config.epochCreated > oldSensor.config.epochCreated) ? sen.config : oldSensor.config
+                    }
+                });
             }
 
             const result = await collections.measurementPoints.updateOne(query, { $set: updateFields });

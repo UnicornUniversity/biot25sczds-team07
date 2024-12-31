@@ -1,7 +1,7 @@
 import { JSONSchemaType } from "ajv";
 import { VALIDATION_ERRORS } from "../../errors/errorMessages";
-import temperatureRangeSchema from "./temperatureRange.schema";
 import { Senzor } from "../../models/MeasurementPoint";
+import sensorConfigSchema from "./sensorConfig.schema";
 
 
 const sensorSchema: JSONSchemaType<Senzor> = {
@@ -9,8 +9,10 @@ const sensorSchema: JSONSchemaType<Senzor> = {
     properties: {
         sensorId: {
             type: 'string',
+            format: 'uuid',
             errorMessage: {
-                type: `${VALIDATION_ERRORS.TYPE} String`
+                type: `${VALIDATION_ERRORS.TYPE} String`,
+                format: `${VALIDATION_ERRORS.FORMAT} UUID`,
             }
         },
         name: {
@@ -31,34 +33,7 @@ const sensorSchema: JSONSchemaType<Senzor> = {
                 type: `${VALIDATION_ERRORS.TYPE} String`
             }
         },
-        config: {
-            type: 'object',
-            properties: {
-                interval: {
-                    type: 'number',
-                    nullable: false,
-                    minimum: 60,
-                    maximum: 86_400, // a day in seconds
-                    errorMessage: {
-                        type: `${VALIDATION_ERRORS.TYPE} Number`,
-                        minimum: `${VALIDATION_ERRORS.MIN} 60 (seconds)`,
-                        maximum: `${VALIDATION_ERRORS.MAX} 86 400 (1 day)`,
-                    },
-                },
-                temperatureLimits: {
-                    type: 'object',
-                    properties: {
-                        cooling: temperatureRangeSchema,
-                        idle: temperatureRangeSchema,
-                        heating: temperatureRangeSchema,
-                    },
-                    required: ['cooling', 'heating', 'idle']
-                }
-            },
-            required: ['interval', 'temperatureLimits'],
-            additionalProperties: false,
-        },
-
+        config: sensorConfigSchema,
     },
     required: ['sensorId', 'name', 'quantity', 'config'],
     additionalProperties: false,
