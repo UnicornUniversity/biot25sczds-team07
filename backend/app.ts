@@ -3,13 +3,12 @@ import express from 'express';
 import logger from 'morgan';
 import 'dotenv/config';
 
-import jwt from 'jsonwebtoken';
-
 import userRouter from './src/routes/userRouter';
 import organisationRouter from './src/routes/organisationRouter';
 import measurementPoinRouter from './src/routes/measurementPointRouter';
 
 import { connectToDatabase } from './src/services/database.service';
+import measuringRouter from './src/routes/measuringRouter';
 
 const app = express();
 
@@ -20,6 +19,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use('/user', userRouter);
 app.use('/organisation', organisationRouter);
 app.use('/measurementPoint', measurementPoinRouter);
+app.use('/measuring', measuringRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

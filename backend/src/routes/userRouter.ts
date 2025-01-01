@@ -1,6 +1,7 @@
 import { NextFunction, Response, Router } from 'express';
 import dayjs from 'dayjs';
 import { ObjectId } from 'mongodb';
+import bcrypt from 'bcrypt';
 
 import { collections } from '../services/database.service';
 
@@ -48,6 +49,12 @@ userRouter.post(
                 }
             }
 
+            const saltRounds = 10; // You can adjust the number of salt rounds as needed
+            const hashPassword = async (password: string): Promise<string> => {
+                const hashedPassword = await bcrypt.hash(password, saltRounds);
+                return hashedPassword;
+            };
+
             // const userId = req.userId ?? "";
 
             const epochNow = dayjs().unix();
@@ -55,7 +62,7 @@ userRouter.post(
                 firstName,
                 lastName,
                 email,
-                password,
+                password: await hashPassword(password),
                 role: isAdmin ? role : Policy.Member,
                 createdEpoch: epochNow,
                 updatedEpoch: epochNow,
@@ -130,16 +137,21 @@ userRouter.post(
                 const dbUser = await collections.users.findOne(
                     {
                         email: email,
-                        password: password
                     },
-                    { projection: { password: 0 } }
                 );
                 if (!dbUser) {
                     req.errorMap["403"] = "Unauthorized";
                     res.status(403).json({ errorMap: req.errorMap });
                     return;
                 }
+                const verifiedPassword = await bcrypt.compare(password, dbUser.password as string);
+                if (!verifiedPassword) {
+                    req.errorMap["403"] = "Unauthorized";
+                    res.status(403).json({ errorMap: req.errorMap });
+                    return;
+                }
                 const generatedToken = generateToken({ id: dbUser._id.toString() });
+                delete dbUser.password;
                 res.status(200).json({ ...dbUser, token: generatedToken, errorMap: req.errorMap });
                 return;
             }
