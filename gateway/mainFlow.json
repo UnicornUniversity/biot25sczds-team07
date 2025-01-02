@@ -1,0 +1,448 @@
+[
+  {
+    "id": "2c41a2bd.aa36ae",
+    "type": "tab",
+    "label": "Flow 1",
+    "disabled": false
+  },
+  {
+    "id": "89b8bf5b34a3c1a7",
+    "type": "serial in",
+    "z": "2c41a2bd.aa36ae",
+    "name": "Serial In",
+    "serial": "3d20fd41757209c6",
+    "x": 76,
+    "y": 281,
+    "wires": [
+      [
+        "de43a92690ef5aa2"
+      ]
+    ]
+  },
+  {
+    "id": "64156188b41a49f2",
+    "type": "serial out",
+    "z": "2c41a2bd.aa36ae",
+    "name": "Serial Out",
+    "serial": "3d20fd41757209c6",
+    "x": 1180,
+    "y": 500,
+    "wires": []
+  },
+  {
+    "id": "de43a92690ef5aa2",
+    "type": "debug",
+    "z": "2c41a2bd.aa36ae",
+    "name": "Serial In Log",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 246,
+    "y": 341,
+    "wires": []
+  },
+  {
+    "id": "d69d64b1482e413c",
+    "type": "http request",
+    "z": "2c41a2bd.aa36ae",
+    "name": "post Temp",
+    "method": "POST",
+    "ret": "txt",
+    "paytoqs": "ignore",
+    "url": "POSTTEMP",
+    "tls": "",
+    "persist": false,
+    "proxy": "",
+    "insecureHTTPParser": false,
+    "authType": "basic",
+    "senderr": false,
+    "headers": [
+      {
+        "keyType": "Content-Type",
+        "keyValue": "",
+        "valueType": "application/json",
+        "valueValue": ""
+      }
+    ],
+    "x": 976,
+    "y": 201,
+    "wires": [
+      [
+        "cb839e42bd157e2b"
+      ]
+    ]
+  },
+  {
+    "id": "7ef0c0c7012af7c2",
+    "type": "switch",
+    "z": "2c41a2bd.aa36ae",
+    "name": "",
+    "property": "payload.cause",
+    "propertyType": "msg",
+    "rules": [
+      {
+        "t": "eq",
+        "v": "tempOut",
+        "vt": "str"
+      },
+      {
+        "t": "eq",
+        "v": "stateChange",
+        "vt": "str"
+      },
+      {
+        "t": "eq",
+        "v": "updateRange",
+        "vt": "str"
+      }
+    ],
+    "checkall": "false",
+    "repair": false,
+    "outputs": 3,
+    "x": 746,
+    "y": 281,
+    "wires": [
+      [
+        "2cd766876dcda136",
+        "d69d64b1482e413c"
+      ],
+      [
+        "7d1de09b724503b7",
+        "05d172ed612ecbd9"
+      ],
+      [
+        "fac7b3b35cbdf09c",
+        "fca312fa99869408"
+      ]
+    ]
+  },
+  {
+    "id": "2cd766876dcda136",
+    "type": "debug",
+    "z": "2c41a2bd.aa36ae",
+    "name": "TempOut Logging",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 976,
+    "y": 161,
+    "wires": []
+  },
+  {
+    "id": "7d1de09b724503b7",
+    "type": "debug",
+    "z": "2c41a2bd.aa36ae",
+    "name": "StateChange Logging",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 976,
+    "y": 261,
+    "wires": []
+  },
+  {
+    "id": "fac7b3b35cbdf09c",
+    "type": "debug",
+    "z": "2c41a2bd.aa36ae",
+    "name": "updateRange Logging",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 976,
+    "y": 361,
+    "wires": []
+  },
+  {
+    "id": "fb8baa7ebc8a323c",
+    "type": "catch",
+    "z": "2c41a2bd.aa36ae",
+    "name": "",
+    "scope": null,
+    "uncaught": false,
+    "x": 160,
+    "y": 160,
+    "wires": [
+      [
+        "7ea67a94a27b783a"
+      ]
+    ]
+  },
+  {
+    "id": "7ea67a94a27b783a",
+    "type": "debug",
+    "z": "2c41a2bd.aa36ae",
+    "name": "Catch All Logging",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 370,
+    "y": 160,
+    "wires": []
+  },
+  {
+    "id": "05d172ed612ecbd9",
+    "type": "http request",
+    "z": "2c41a2bd.aa36ae",
+    "name": "post stateChange",
+    "method": "POST",
+    "ret": "txt",
+    "paytoqs": "ignore",
+    "url": "stateChange",
+    "tls": "",
+    "persist": false,
+    "proxy": "",
+    "insecureHTTPParser": false,
+    "authType": "basic",
+    "senderr": false,
+    "headers": [
+      {
+        "keyType": "Content-Type",
+        "keyValue": "",
+        "valueType": "application/json",
+        "valueValue": ""
+      }
+    ],
+    "x": 976,
+    "y": 301,
+    "wires": [
+      [
+        "56efd2c9c27cd073"
+      ]
+    ]
+  },
+  {
+    "id": "fca312fa99869408",
+    "type": "http request",
+    "z": "2c41a2bd.aa36ae",
+    "name": "post rangeUpdate",
+    "method": "POST",
+    "ret": "txt",
+    "paytoqs": "ignore",
+    "url": "POSTTEMP",
+    "tls": "",
+    "persist": false,
+    "proxy": "",
+    "insecureHTTPParser": false,
+    "authType": "basic",
+    "senderr": false,
+    "headers": [
+      {
+        "keyType": "Content-Type",
+        "keyValue": "",
+        "valueType": "application/json",
+        "valueValue": ""
+      }
+    ],
+    "x": 976,
+    "y": 401,
+    "wires": [
+      [
+        "9b2ad14f736b4718"
+      ]
+    ]
+  },
+  {
+    "id": "9b2ad14f736b4718",
+    "type": "debug",
+    "z": "2c41a2bd.aa36ae",
+    "name": "Post Range Update Response",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 1266,
+    "y": 401,
+    "wires": []
+  },
+  {
+    "id": "56efd2c9c27cd073",
+    "type": "debug",
+    "z": "2c41a2bd.aa36ae",
+    "name": "Post State Change Response",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 1266,
+    "y": 301,
+    "wires": []
+  },
+  {
+    "id": "cb839e42bd157e2b",
+    "type": "debug",
+    "z": "2c41a2bd.aa36ae",
+    "name": "Post Temp Response",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 1236,
+    "y": 201,
+    "wires": []
+  },
+  {
+    "id": "3d6eb2cf271f2689",
+    "type": "json",
+    "z": "2c41a2bd.aa36ae",
+    "name": "",
+    "property": "payload",
+    "action": "obj",
+    "pretty": false,
+    "x": 270,
+    "y": 280,
+    "wires": [
+      [
+        "31794fcbfe6a401b",
+        "acd40835d621a82a"
+      ]
+    ]
+  },
+  {
+    "id": "31794fcbfe6a401b",
+    "type": "debug",
+    "z": "2c41a2bd.aa36ae",
+    "name": "Json Log",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 476,
+    "y": 341,
+    "wires": []
+  },
+  {
+    "id": "a316f76c483205b0",
+    "type": "debug",
+    "z": "2c41a2bd.aa36ae",
+    "name": "timestamped Log",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 706,
+    "y": 341,
+    "wires": []
+  },
+  {
+    "id": "acd40835d621a82a",
+    "type": "function",
+    "z": "2c41a2bd.aa36ae",
+    "name": "Add timestamp",
+    "func": "msg.payload.timestamp=Date();\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 486,
+    "y": 281,
+    "wires": [
+      [
+        "a316f76c483205b0",
+        "7ef0c0c7012af7c2"
+      ]
+    ]
+  },
+  {
+    "id": "46bbebbb98790bd0",
+    "type": "function",
+    "z": "2c41a2bd.aa36ae",
+    "name": "conver to byte string",
+    "func": "\nvar length = 10;\nvar type = 1;\nmsg.payload = String.fromCharCode(10, 10, 1);\nmsg.payload = msg.payload+\"abcd1abcd2\"\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 880,
+    "y": 500,
+    "wires": [
+      [
+        "cbd77ff31acf6149",
+        "64156188b41a49f2"
+      ]
+    ]
+  },
+  {
+    "id": "cbd77ff31acf6149",
+    "type": "debug",
+    "z": "2c41a2bd.aa36ae",
+    "name": "byte string Log",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 1020,
+    "y": 540,
+    "wires": []
+  },
+  {
+    "id": "3d20fd41757209c6",
+    "type": "serial-port",
+    "name": "Arduino",
+    "serialport": "COM4",
+    "serialbaud": "9600",
+    "databits": "8",
+    "parity": "none",
+    "stopbits": "1",
+    "waitfor": "",
+    "dtr": "none",
+    "rts": "none",
+    "cts": "none",
+    "dsr": "none",
+    "newline": "\\n",
+    "bin": "false",
+    "out": "char",
+    "addchar": "",
+    "responsetimeout": "10000"
+  }
+]
