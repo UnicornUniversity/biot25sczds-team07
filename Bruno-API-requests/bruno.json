@@ -1,0 +1,13 @@
+{
+  "version": "1",
+  "name": "IoT-team2-2024-2025",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ],
+  "presets": {
+    "requestType": "http",
+    "requestUrl": "http://localhost:8080"
+  }
+}

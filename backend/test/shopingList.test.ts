@@ -83,7 +83,7 @@ describe("shoppingList route", () => {
         describe("given a correct request", () => {
             it("should return a 200 with the expected object", async () => {
                 const requestBody = {
-                    order: "decs",
+                    order: "desc",
                     pageInfo: {
                         pageIndex: 0,
                         pageSize: 20

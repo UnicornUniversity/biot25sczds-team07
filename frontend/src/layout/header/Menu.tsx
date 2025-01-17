@@ -73,7 +73,7 @@ const Menu = () => {
                         onClick={() => navigate(`/user/${userData?._id ?? ""}`)}
                     >
                         <span className='m-0 p-0'>
-                            {userData?.username ?? "UNDEFINED"}
+                            {userData?.email ?? "UNDEFINED"}
                         </span>
                     </Button>
                     <div className='ms-4'>

@@ -6,7 +6,7 @@ export interface UpdateMeasurementPoint {
     id: string,
     name?: string,
     description?: string,
-    senzors?: Senzor[]
+    sensors?: Senzor[]
 }
 
 const measurementPointUpdateSchema: JSONSchemaType<UpdateMeasurementPoint> = {
@@ -35,7 +35,7 @@ const measurementPointUpdateSchema: JSONSchemaType<UpdateMeasurementPoint> = {
                 type: `${VALIDATION_ERRORS.TYPE} String`,
             },
         },
-        senzors: {
+        sensors: {
             type: 'array',
             items: sensorSchema,
             nullable: true

@@ -100,6 +100,8 @@ organisationRouter.post(
             const organisationId = req.body.id;
             const userId = req.userId ?? "";
 
+            console.log("organisation/delete - userId: ", userId);
+
             const userHasAccess = await validateUserHasAdminAccessToOrg(userId, organisationId);
             if (userHasAccess.code === 500 || userHasAccess.code === 404) {
                 const isAppAdmin = await isUserAdmin(userId);
@@ -227,7 +229,7 @@ organisationRouter.post(
 );
 
 organisationRouter.get(
-    "/get:id",
+    "/get/:id",
     authorizeJWTToken,
     async (req: OrganisationListRequest, res: Response, next: NextFunction) => {
         req.errorMap = req.errorMap ?? {};
@@ -291,17 +293,15 @@ organisationRouter.post(
             const queryFilter = [
                 // Match documents based on the filtering conditions
                 {
-                    users: {
-                        $elemMatch: {
-                            id: userId,
-                        }
+                    $match: {
+                        "users.id": userId,
                     }
                 },
                 {
                     $facet: {
                         totalCount: [{ $count: "count" }], // Count total matching documents
                         paginatedResults: [
-                            { $sort: { name: (order === "decs" ? -1 : 1) } }, // Sort by name field
+                            { $sort: { name: (order === "desc" ? -1 : 1) } }, // Sort by name field
                             { $skip: pageInfo.pageIndex * pageInfo.pageSize }, // Skip for pagination
                             { $limit: pageInfo.pageSize }, // Limit to page size
                         ],

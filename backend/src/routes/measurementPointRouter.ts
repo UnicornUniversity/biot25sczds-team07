@@ -47,7 +47,7 @@ measurementPointRouter.post(
                 name,
                 description,
                 creatorId: req.userId as string,
-                senzors: [],
+                sensors: [],
                 createdEpoch: dayjs().unix(), // Current timestamp in seconds
                 updatedEpoch: dayjs().unix(), // Initialy same as createdEpoch
             };
@@ -143,10 +143,8 @@ measurementPointRouter.get(
             }
 
             const userIsInOrg = await collections.organisations.findOne({
-                _id: measurementPoint.organisationId,
-                users: {
-                    $elementMatch: { id: userId }
-                }
+                _id: new ObjectId(measurementPoint.organisationId as string),
+                "users.id": userId,
             })
             if (!userIsInOrg) {
                 res.status(404).json({ errorMap: { ...req.errorMap, ["404"]: `Unable to find matching Measurement Point with id: ${id}` } });
@@ -178,14 +176,12 @@ measurementPointRouter.post(
             return;
         }
 
-        const { organisationId, pageInfo = { pageIndex: 0, pageSize: 10 }, order = "decs" } = req.body
+        const { organisationId, pageInfo = { pageIndex: 0, pageSize: 10 }, order = "desc" } = req.body
         const userId = req.userId ?? "";
         try {
             const userIsInOrg = await collections.organisations.findOne({
                 _id: new ObjectId(organisationId),
-                users: {
-                    $elementMatch: { id: userId }
-                }
+                "users.id": userId,
             })
             if (!userIsInOrg) {
                 res.status(404).json({ errorMap: { ...req.errorMap, ["404"]: `Unable to find matching Organisation with id: ${organisationId}` } });
@@ -195,13 +191,15 @@ measurementPointRouter.post(
             const queryFilter = [
                 // Match documents based on the filtering conditions
                 {
-                    organisationId,
+                    $match: {
+                        organisationId: organisationId,
+                    }
                 },
                 {
                     $facet: {
                         totalCount: [{ $count: "count" }], // Count total matching documents
                         paginatedResults: [
-                            { $sort: { name: (order === "decs" ? -1 : 1) } }, // Sort by name field
+                            { $sort: { name: (order === "desc" ? -1 : 1) } }, // Sort by name field
                             { $skip: pageInfo.pageIndex * pageInfo.pageSize }, // Skip for pagination
                             { $limit: pageInfo.pageSize }, // Limit to page size
                         ],
@@ -215,17 +213,6 @@ measurementPointRouter.post(
             const paginatedResults: (MeasurementPoint & { _id: ObjectId })[] = measurementPoints[0]?.paginatedResults || []; // Paginated results
 
             if (Array.isArray(paginatedResults)) {
-                // const listsWithUncheckedItems: (ShoppingList & { numberOfUncheckedItems: number })[] = [];
-                // for (const list of paginatedResults) {
-                //     if (!list._id) { continue; }
-                //     const uncheckedItemsCount = await getListUncheckedItemsCount(list._id);
-                //     // console.log(`unchecked items for listId: ${list._id} - ${uncheckedItemsCount}`)
-                //     if (uncheckedItemsCount < numberOfUncheckedItems) {
-                //         // console.log("not pushing the list to result");
-                //         continue;
-                //     }
-                //     listsWithUncheckedItems.push({ ...list, numberOfUncheckedItems: uncheckedItemsCount });
-                // }
                 res.status(200).json({ measurementPoints: paginatedResults, pageInfo: { ...pageInfo, total: totalCount } });
             } else {
                 res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: "Failed to fetch the Measurement Points" } });
@@ -254,7 +241,7 @@ measurementPointRouter.post(
             return;
         }
 
-        const { id, name = "", description = "", senzors } = req.body;
+        const { id, name = "", description = "", sensors } = req.body;
         const userId = req.userId ?? "";
         const query = { _id: new ObjectId(id) };
         try {
@@ -275,18 +262,18 @@ measurementPointRouter.post(
             }
 
             // Define the update fields
-            const updateFields: { updatedEpoch: number, name?: string, description?: string, senzors?: Senzor[] } = { updatedEpoch: dayjs().unix() };
+            const updateFields: { updatedEpoch: number, name?: string, description?: string, sensors?: Senzor[] } = { updatedEpoch: dayjs().unix() };
             if (name) { updateFields.name = name; }
             if (description) { updateFields.description = description; }
-            if (senzors) {
-                const senzorIds = senzors.map((sensor) => sensor.sensorId);
+            if (sensors) {
+                const senzorIds = sensors.map((sensor) => sensor.sensorId);
                 if (senzorIds.length !== new Set(senzorIds).size) {
                     req.errorMap[400] = `Each sensor in sensors Array must have unique sensorId.`
                     res.status(400).json({ erroMap: req.errorMap });
                     return;
                 }
-                updateFields.senzors = senzors.map((sen) => {
-                    const oldSensor: Senzor | undefined = measurementPoint.senzors.find((odlSen: Senzor) => odlSen.sensorId === sen.sensorId)
+                updateFields.sensors = sensors.map((sen) => {
+                    const oldSensor: Senzor | undefined = measurementPoint.sensors.find((odlSen: Senzor) => odlSen.sensorId === sen.sensorId)
                     if (!oldSensor) { return sen; }
                     return {
                         ...sen,

@@ -202,15 +202,15 @@ userRouter.post(
                 res.status(404).json({ errorMap: { ...req.errorMap, ["404"]: `User with this id: ${toDeleteUserId} doesn't exist.` } });
                 return;
             } else if (deletedResult.acknowledged) {
-                const filter = {
-                    "users.id": toDeleteUserId
-                };
-                const update = {
-                    $pull: {
-                        users: { id: toDeleteUserId }
+                await collections.organisations.updateMany(
+                    {},
+                    {
+                        // @ts-expect-error - There is hardly any workaround this thing in typescript (according to git issue from 2021)
+                        $pull: {
+                            users: { id: toDeleteUserId },
+                        },
                     }
-                };
-                await collections.organisations.updateMany(filter, update)
+                )
 
                 res.status(202).json({ errorMap: req.errorMap });
                 return;
@@ -302,7 +302,7 @@ userRouter.post(
 );
 
 userRouter.get(
-    "/get:id",
+    "/get/:id",
     authorizeJWTToken,
     async (req: AuthorizationRequest, res: Response, next: NextFunction) => {
         req.errorMap = req.errorMap ?? {};
@@ -325,7 +325,7 @@ userRouter.get(
                 res.status(200).json({ ...user, errorMap: req.errorMap });
                 return;
             }
-            res.status(404).json({ errorMap: { ...req.errorMap, ["404"]: `Unable to find matching Organisation with id: ${getUserId}` } });
+            res.status(404).json({ errorMap: { ...req.errorMap, ["404"]: `Unable to find matching User with id: ${getUserId}` } });
         } catch (error) {
             if (error instanceof Error) {
                 console.error(error.message);
@@ -366,9 +366,10 @@ userRouter.post(
                     $facet: {
                         totalCount: [{ $count: "count" }], // Count total matching documents
                         paginatedResults: [
-                            { $sort: { name: (order === "decs" ? -1 : 1) } }, // Sort by name field
+                            { $sort: { name: (order === "desc" ? -1 : 1) } }, // Sort by name field
                             { $skip: pageInfo.pageIndex * pageInfo.pageSize }, // Skip for pagination
                             { $limit: pageInfo.pageSize }, // Limit to page size
+                            { $project: { password: 0 } } // Exclude the password field
                         ],
                     },
                 },

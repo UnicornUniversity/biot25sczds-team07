@@ -17,19 +17,17 @@ const sensorSchema: JSONSchemaType<Senzor> = {
         },
         name: {
             type: 'string',
-            maxLength: 5,
+            minLength: 5,
             errorMessage: {
-                maxLength: `${VALIDATION_ERRORS.MIN_LENGTH} 5`,
+                minLength: `${VALIDATION_ERRORS.MIN_LENGTH} 5`,
                 type: `${VALIDATION_ERRORS.TYPE} String`,
             },
         },
         quantity: {
             type: "string",
             enum: ["temperature", "acceleration"],
-            maxLength: 100,
             errorMessage: {
                 enum: `${VALIDATION_ERRORS.PATTERN} "temperature" or "acceleration"`,
-                maxLength: `${VALIDATION_ERRORS.MAX_LENGTH} 100`,
                 type: `${VALIDATION_ERRORS.TYPE} String`
             }
         },

@@ -25,7 +25,7 @@ export default class MeasurementPoint {
         public description: string,
         public influxMeasurement: string,
         public creatorId: string,
-        public senzors: Senzor[],
+        public sensors: Senzor[],
         public createdEpoch: number,
         public updatedEpoch: number,
         public _id?: ObjectId

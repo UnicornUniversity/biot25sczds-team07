@@ -1,0 +1,18 @@
+meta {
+  name: Add
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8080/organisation/add
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Organizace pro Smart Zařízení",
+    "description": "Žádný popis není třeba"
+  }
+}

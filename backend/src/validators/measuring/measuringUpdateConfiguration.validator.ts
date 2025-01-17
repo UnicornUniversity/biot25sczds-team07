@@ -12,8 +12,7 @@ export const measuringUpdateConfigurationValidator = async (
     res: Response,
     next: NextFunction
 ) => {
-    // console.log("getList - req.params:", req.params);
-    const isValid = validateMeasuringUpdateConfiguration(req.params);
+    const isValid = validateMeasuringUpdateConfiguration(req.body);
     if (!isValid && validateMeasuringUpdateConfiguration.errors) { // If schema validation failed and error occured return with formatted error message 
         const error = await parseErrors(validateMeasuringUpdateConfiguration.errors);
         res.status(400).json({ errorMap: { ...req.errorMap, ["invalidDtoIn"]: JSON.stringify(error) } });

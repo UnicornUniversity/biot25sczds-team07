@@ -1,0 +1,22 @@
+meta {
+  name: List
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:8080/measurementPoint/list
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "organisationId": "678a4c8878474dee5467222a",
+    "pageInfo": {
+      "pageIndex": 0,
+      "pageSize": 20
+    },
+    "order": "asc" 
+  }
+}

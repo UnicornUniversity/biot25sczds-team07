@@ -1,0 +1,24 @@
+meta {
+  name: SendData
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:8080/measuring/sendData
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "sensorId": "2617e68a-621e-4c2f-8350-36322d009f26",
+    "tempData": [
+      {
+        "epoch": 1737119535,
+        "dateTime": "2025-01-17T00:00:00Z",
+        "temperature": 15
+      }
+    ]
+  }
+}

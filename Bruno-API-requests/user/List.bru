@@ -1,0 +1,22 @@
+meta {
+  name: List
+  type: http
+  seq: 6
+}
+
+post {
+  url: http://localhost:8080/user/list
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "findEmailString": "emil",
+    "pageInfo": {
+      "pageIndex": 0,
+      "pageSize": 20
+    },
+    "order": "asc" 
+  }
+}

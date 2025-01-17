@@ -5,7 +5,6 @@ import { collections } from '../services/database.service';
 import { MeasuringGetConfigurationRequest, measuringGetConfigurationValidator } from '../validators/measuring/measuringGetConfiguration.validator';
 import { Senzor } from '../models/MeasurementPoint';
 import { MeasuringUpdateConfigurationRequest, measuringUpdateConfigurationValidator } from '../validators/measuring/measuringUpdateConfiguration.validator';
-import { validateAddData } from '../validators/measuring/dataAdd.schema';
 import { DataAddRequest, dataAddValidator } from '../validators/measuring/dataAdd.validator';
 
 const measuringRouter = Router();
@@ -29,7 +28,7 @@ measuringRouter.get(
 
         try {
             const measurementPoint = await collections.measurementPoints.findOne({
-                senzors: {
+                sensors: {
                     $elemMatch: {
                         sensorId: sensorId
                     }
@@ -40,7 +39,7 @@ measuringRouter.get(
                 return;
             }
 
-            const senzor = measurementPoint.senzors.find((sen: Senzor) => sen.sensorId === sensorId);
+            const senzor = measurementPoint.sensors.find((sen: Senzor) => sen.sensorId === sensorId);
             if (!senzor) {
                 res.status(404).json({ errorMap: { ...req.errorMap, ["404"]: `Sensor with this sensorId: ${sensorId} was not found.` } });
                 return;
@@ -75,7 +74,7 @@ measuringRouter.post(
         const { sensorId, config } = req.body;
         try {
             const measurementPoint = await collections.measurementPoints.findOne({
-                senzors: {
+                sensors: {
                     $elemMatch: {
                         sensorId: sensorId
                     }
@@ -86,7 +85,7 @@ measuringRouter.post(
                 return;
             }
 
-            const senzorIndex: number = measurementPoint.senzors.findIndex((sen: Senzor) => sen.sensorId === sensorId);
+            const senzorIndex: number = measurementPoint.sensors.findIndex((sen: Senzor) => sen.sensorId === sensorId);
             if (senzorIndex === -1) {
                 res.status(404).json({ errorMap: { ...req.errorMap, ["404"]: `Sensor with this sensorId: ${sensorId} was not found.` } });
                 return;
@@ -99,7 +98,7 @@ measuringRouter.post(
                 { _id: measurementPoint._id },
                 {
                     $set: {
-                        senzors: newSensor
+                        sensors: newSensor
                     }
                 }
             );
@@ -139,7 +138,7 @@ measuringRouter.post(
         const { sensorId, tempData } = req.body;
         try {
             const measurementPoint = await collections.measurementPoints.findOne({
-                senzors: {
+                sensors: {
                     $elemMatch: {
                         sensorId: sensorId
                     }
@@ -152,6 +151,8 @@ measuringRouter.post(
 
             console.log("/sendData - tempData: ", tempData);
             // TODO - send data into influx DB
+            res.status(200).json({ errorMap: { ...req.errorMap } });
+            return;
         } catch (error) {
             if (error instanceof Error) {
                 console.error(error.message);

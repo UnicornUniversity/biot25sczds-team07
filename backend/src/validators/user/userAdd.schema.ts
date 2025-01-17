@@ -35,18 +35,18 @@ const userAddSchema: JSONSchemaType<AddUser> = {
         email: {
             type: 'string',
             format: 'email',
-            nullable: false,         
-            errorMessage: {            
+            nullable: false,
+            errorMessage: {
                 type: `${VALIDATION_ERRORS.TYPE} String (Email)`,
             },
         },
         password: {
             type: 'string',
             nullable: false,
-            minLength: 15,
+            minLength: 3, // TODO - in production make higher
             errorMessage: {
-                minLength: `${VALIDATION_ERRORS.MIN_LENGTH} 15`,
-                type: `${VALIDATION_ERRORS.TYPE} String (Hash)`,
+                minLength: `${VALIDATION_ERRORS.MIN_LENGTH} 3`,
+                type: `${VALIDATION_ERRORS.TYPE} String`,
             },
         },
         role: {

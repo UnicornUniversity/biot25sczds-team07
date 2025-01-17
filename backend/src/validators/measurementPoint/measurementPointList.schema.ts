@@ -4,7 +4,7 @@ import { PageInfo, pageInfoSchema } from "../other_schemas/pageInfo.schema";
 export interface MeasurementPointListSchema {
     organisationId: string,
     pageInfo: PageInfo,
-    order?: "decs" | "asc"
+    order?: "desc" | "asc"
 }
 
 const measurementPointListSchema: JSONSchemaType<MeasurementPointListSchema> = {
@@ -20,10 +20,10 @@ const measurementPointListSchema: JSONSchemaType<MeasurementPointListSchema> = {
         pageInfo: pageInfoSchema,
         order: {
             type: 'string',
-            enum: ["decs", "asc"],
+            enum: ["desc", "asc"],
             nullable: true,
             errorMessage: {
-                enum: `${VALIDATION_ERRORS.PATTERN} "decs" or "asc"`,
+                enum: `${VALIDATION_ERRORS.PATTERN} "desc" or "asc"`,
             },
         },
     },

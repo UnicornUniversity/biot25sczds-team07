@@ -1,0 +1,18 @@
+meta {
+  name: Delete
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:8080/measurementPoint/delete
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "organisationId": "678a4c8878474dee5467222a",
+    "id": "678a5115d6ef818a9a6714d5"
+  }
+}

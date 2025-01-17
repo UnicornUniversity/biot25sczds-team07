@@ -6,7 +6,7 @@ import { pageInfoSchema } from "../other_schemas/pageInfo.schema";
 export interface UserListSchema {
     findEmailString: string,
     pageInfo: PageInfo
-    order?: "decs" | "asc" | null,
+    order?: "desc" | "asc" | null,
 }
 
 const userListSchema: JSONSchemaType<UserListSchema> = {
@@ -22,10 +22,10 @@ const userListSchema: JSONSchemaType<UserListSchema> = {
         pageInfo: pageInfoSchema,
         order: {
             type: 'string',
-            enum: ["decs", "asc"],
+            enum: ["desc", "asc"],
             nullable: true,
             errorMessage: {
-                enum: `${VALIDATION_ERRORS.PATTERN} "decs" or "asc"`,
+                enum: `${VALIDATION_ERRORS.PATTERN} "desc" or "asc"`,
             },
         },
     },

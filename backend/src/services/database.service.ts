@@ -34,7 +34,7 @@ export async function connectToDatabase() {
     collections.measurementPoints = measurementPointsCollection;
     collections.users = usersCollection;
 
-    console.log(`Successfully connected to database: ${db.databaseName} and collections: (measurementConfigs: ${organisationsCollection.collectionName}, measurementPoints: ${measurementPointsCollection.collectionName}, users: ${usersCollection.collectionName}`);
+    console.log(`Successfully connected to database: ${db.databaseName} and collections: (organisations: ${organisationsCollection.collectionName}, measurementPoints: ${measurementPointsCollection.collectionName}, users: ${usersCollection.collectionName}`);
 }
 
 export const collections: {

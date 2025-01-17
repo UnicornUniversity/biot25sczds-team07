@@ -7,7 +7,7 @@ export const validateUserHasAdminAccessToOrg = async (userId: string, organisati
         return { code: 500, message: "DB is in invalid state - collection Organisations doesn't exist" }
     }
     const queryOrganisation = {
-        _id: new Object(organisationId),
+        _id: new ObjectId(organisationId),
         users: {
             $elemMatch: {
                 id: userId,
@@ -16,6 +16,7 @@ export const validateUserHasAdminAccessToOrg = async (userId: string, organisati
         }
     }
     const organisation = await collections.organisations.findOne(queryOrganisation);
+    // console.log("validateUserHasAdminAccessToOrg - found desired organisation: ", organisation);
     if (organisation) {
         return organisation;
     }
