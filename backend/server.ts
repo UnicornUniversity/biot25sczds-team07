@@ -1,6 +1,6 @@
 import { initializeApp } from './app';
 
-const port = 8080;
+const port = process.env.PORT || 8000;
 
 initializeApp().then((app) => {
     app.listen(port, () => {
