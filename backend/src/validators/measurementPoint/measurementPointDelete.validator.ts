@@ -16,7 +16,7 @@ export const measurementPointDeleteValidator = async (
     const isValid = validateMeasurementPointDelete(req.body);
     if (!isValid && validateMeasurementPointDelete.errors) { // If schema validation failed and error occured return with formatted error message 
         const error = await parseErrors(validateMeasurementPointDelete.errors);
-        res.status(400).json({ errorMap: { ...req.errorMap, ["invalidDtoIn"]: JSON.stringify(error) } });
+        res.status(400).json({ errorMap: { ...req.errorMap, ["invalidDtoIn"]: error } });
         return;
     }
     next(); // If no error occured proceed further

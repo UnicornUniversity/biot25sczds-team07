@@ -15,9 +15,4 @@ ajvErrors(ajv /*,{ singleError: true }*/);
 // adding format for objectId = Mongo ObjectID format
 ajv.addFormat('objectId', /^[0-9a-fA-F]{24}$/);
 
-
-
-
-
-
 export { ajv, VALIDATION_ERRORS, JSONSchemaType }

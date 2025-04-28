@@ -9,6 +9,7 @@ import measurementPoinRouter from './src/routes/measurementPointRouter';
 
 import { connectToDatabase } from './src/services/database.service';
 import measuringRouter from './src/routes/measuringRouter';
+import sensorRouter from './src/routes/sensorRouter';
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use('/user', userRouter);
 app.use('/organisation', organisationRouter);
 app.use('/measurementPoint', measurementPoinRouter);
 app.use('/measuring', measuringRouter);
+app.use("/sensor", sensorRouter)
 
 // app/user/add 
 

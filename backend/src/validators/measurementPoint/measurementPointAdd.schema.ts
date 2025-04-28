@@ -1,7 +1,6 @@
 import { ajv, JSONSchemaType, VALIDATION_ERRORS, } from "../../ajv-validation/ajvInstance"
 // import temperatureRangeSchema, { TemperatureRange } from "./temperatureRange.schema";
 
-
 export interface AddMeasurementPoint {
     organisationId: string,
     name: string,

@@ -16,7 +16,7 @@ export const userAuthorizeValidator = async (
     const isValid = validateUserAuthorize(req.body);
     if (!isValid && validateUserAuthorize.errors) { // If schema validation failed and error occured return with formatted error message 
         const error = await parseErrors(validateUserAuthorize.errors);
-        res.status(400).json({ errorMap: { ...req.errorMap, ["invalidDtoIn"]: JSON.stringify(error) } });
+        res.status(400).json({ errorMap: { ...req.errorMap, ["invalidDtoIn"]: error } });
         return;
     }
     next(); // If no error occured proceed further

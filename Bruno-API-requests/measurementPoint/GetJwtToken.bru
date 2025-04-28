@@ -1,0 +1,17 @@
+meta {
+  name: GetJwtToken
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{hostname}}/measurementPoint/getJwtToken
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "_id": "680501e80f48c38d51d4ce92"
+  }
+}

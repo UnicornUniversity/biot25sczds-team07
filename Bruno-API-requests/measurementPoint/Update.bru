@@ -5,41 +5,16 @@ meta {
 }
 
 post {
-  url: http://localhost:8080/measurementPoint/update
+  url: {{hostname}}/measurementPoint/update
   body: json
   auth: inherit
 }
 
 body:json {
   {
-    "id": "678a50bdd6ef818a9a6714d4",
+    "id": "680501e80f48c38d51d4ce92",
     // only id is mandatory, other attributes can be undefined
     // "name": "Nové jméno pro measurementPoint",
-    // "description": "Nový popisek",
-    "sensors": [
-      {
-        "sensorId": "2617e68a-621e-4c2f-8350-36322d009f26",
-        "name": "Senzor Teploty",
-        "quantity": "temperature", // or "acceleration"     
-        "config": {
-          "epochCreated": 1737119535,
-          "interval": 120,
-          "temperatureLimits": {
-            "cooling": {
-              "min": 35,
-              "max": 100
-            },
-            "idle": {
-              "min": 20,
-              "max": 34
-            },
-            "heating": {
-              "min": -20,
-              "max": 19
-            }
-          }
-        }
-      }
-    ]
+    "description": "Nový popisek"
   }
 }

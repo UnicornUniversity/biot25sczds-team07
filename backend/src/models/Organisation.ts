@@ -1,22 +1,19 @@
 import { ObjectId } from "mongodb";
+import { BaseEntity } from "./BaseEntity";
 
 export enum Policy {
     Admin = 0,
     Member = 1
 }
 
-export type OrganisationUser = {
-    policy: Policy, id: string // ObjectId
+export interface OrganisationUser {
+    policy: Policy,
+    id: ObjectId // ObjectId
 }
 
-export default class Organisation {
-    constructor(
-        public name: string,
-        public description: string,
-        public users: OrganisationUser[],
-        public bucketToken: string,
-        public createdEpoch: number,
-        public updatedEpoch: number,
-        public _id?: ObjectId
-    ) { }
+export default interface Organisation extends BaseEntity {
+    name: string,
+    description: string,
+    users: OrganisationUser[],
+    bucketToken: string,
 }

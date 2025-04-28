@@ -5,14 +5,14 @@ meta {
 }
 
 post {
-  url: http://localhost:8080/user/update
+  url: {{hostname}}/user/update
   body: json
   auth: inherit
 }
 
 body:json {
   {
-    "id": "678808b322dc25165954fcea",
+    "_id": "6802071f68ef5781122892f0",
     // only id is mandatory, everything else can be undefined
      "firstName": "Ludvík"
     // "lastName": "lastName",

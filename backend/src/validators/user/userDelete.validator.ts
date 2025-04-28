@@ -16,7 +16,7 @@ export const userDeleteValidator = async (
     const isValid = validateUserDelete(req.body);
     if (!isValid && validateUserDelete.errors) { // If schema validation failed and error occured return with formatted error message 
         const error = await parseErrors(validateUserDelete.errors);
-        res.status(400).json({ errorMap: { ...req.errorMap, ["invalidDtoIn"]: JSON.stringify(error) } });
+        res.status(400).json({ errorMap: { ...req.errorMap, ["invalidDtoIn"]: error } });
         return;
     }
     next(); // If no error occured proceed further

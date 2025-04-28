@@ -1,12 +1,19 @@
 
 import * as mongoDB from "mongodb";
 import * as dotenv from "dotenv";
+import Organisation from "../models/Organisation";
+import MeasurementPoint from "../models/MeasurementPoint";
+import User from "../models/User";
 
 // External Dependencies
 
 // Global Variables
 
 // Initialize Connection
+
+type OrganisationCollection = mongoDB.Collection<Organisation>;
+type MeasurementPointCollection = mongoDB.Collection<MeasurementPoint>;
+type UserCollection = mongoDB.Collection<User>;
 
 export async function connectToDatabase() {
     dotenv.config();
@@ -22,13 +29,13 @@ export async function connectToDatabase() {
     const db: mongoDB.Db = client.db(process.env.DB_NAME);
 
     if (!ORGANISATION_COLLECTION_NAME) { throw Error("Invalid .env - ORGANISATION_COLLECTION_NAME is missing or has invalid value"); }
-    const organisationsCollection: mongoDB.Collection = db.collection(ORGANISATION_COLLECTION_NAME);
+    const organisationsCollection: OrganisationCollection = db.collection(ORGANISATION_COLLECTION_NAME);
 
     if (!MEASUREMENT_POINT_COLLECTION_NAME) { throw Error("Invalid .env - MEASUREMENT_POINT_COLLECTION_NAME is missing or has invalid value"); }
-    const measurementPointsCollection: mongoDB.Collection = db.collection(MEASUREMENT_POINT_COLLECTION_NAME);
+    const measurementPointsCollection: MeasurementPointCollection = db.collection(MEASUREMENT_POINT_COLLECTION_NAME);
 
     if (!USERS_COLLECTION_NAME) { throw Error("Invalid .env - USERS_COLLECTION_NAME is missing or has invalid value"); }
-    const usersCollection: mongoDB.Collection = db.collection(USERS_COLLECTION_NAME);
+    const usersCollection: UserCollection = db.collection(USERS_COLLECTION_NAME);
 
     collections.organisations = organisationsCollection;
     collections.measurementPoints = measurementPointsCollection;
@@ -38,7 +45,7 @@ export async function connectToDatabase() {
 }
 
 export const collections: {
-    organisations?: mongoDB.Collection,
-    measurementPoints?: mongoDB.Collection,
-    users?: mongoDB.Collection
+    organisations?: OrganisationCollection,
+    measurementPoints?: MeasurementPointCollection,
+    users?: UserCollection
 } = {}

@@ -1,5 +1,6 @@
 import { ajv, JSONSchemaType, VALIDATION_ERRORS, } from "../../ajv-validation/ajvInstance"
 import { Policy } from "../../models/Organisation";
+import { userPolicySchema } from "./userPolicy.schema";
 // import temperatureRangeSchema, { TemperatureRange } from "./temperatureRange.schema";
 
 
@@ -49,14 +50,7 @@ const userAddSchema: JSONSchemaType<AddUser> = {
                 type: `${VALIDATION_ERRORS.TYPE} String`,
             },
         },
-        role: {
-            type: 'integer',
-            enum: [0, 1],
-            errorMessage: {
-                type: `${VALIDATION_ERRORS.TYPE} integer`,
-                enum: `${VALIDATION_ERRORS.ENUM} Policy (0 for Admin, 1 for User)`,
-            },
-        },
+        role: userPolicySchema,
     },
     required: ['firstName', 'lastName', 'email', 'password', 'role'],
     additionalProperties: false,

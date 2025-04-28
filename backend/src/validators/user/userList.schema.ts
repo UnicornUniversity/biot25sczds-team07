@@ -1,12 +1,11 @@
 
 import { ajv, JSONSchemaType, VALIDATION_ERRORS, } from "../../ajv-validation/ajvInstance"
-import { PageInfo } from '../../helpers/commonTypes';
-import { pageInfoSchema } from "../other_schemas/pageInfo.schema";
+import { Order, PageInfo, pageInfoSchema } from "../other_schemas/pageInfo.schema";
 
 export interface UserListSchema {
     findEmailString: string,
     pageInfo: PageInfo
-    order?: "desc" | "asc" | null,
+    order?: Order,
 }
 
 const userListSchema: JSONSchemaType<UserListSchema> = {

@@ -1,11 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, FC, ReactNode } from 'react';
 import { redirect } from 'react-router-dom';
-import userRequests, { AuthorizeCredentials, User } from '../../API/requests/userRequests';
+import userRequests, { AuthorizeUserDtoIn, User } from '../../API/requests/userRequests';
 
 interface UserDataContext {
     userData: User | null;
     setUserData: React.Dispatch<React.SetStateAction<User | null>>;
-    loginUser: (credentials: AuthorizeCredentials) => Promise<User | false>;
+    loginUser: (credentials: AuthorizeUserDtoIn) => Promise<User | false>;
     logoutUser: () => void;
 }
 
@@ -25,7 +25,7 @@ export const useLoggedUserContext = () => {
 export const UserProvider: FC<{ children: ReactNode }> = ({ children }) => {
     const [userData, setUserData] = useState<User | null>(null);
 
-    const loginUser = async (credentials: AuthorizeCredentials) => {
+    const loginUser = async (credentials: AuthorizeUserDtoIn) => {
         try {
             const result = await userRequests.authorize(credentials);
             console.log("loginUser - result: ", result);
@@ -43,7 +43,6 @@ export const UserProvider: FC<{ children: ReactNode }> = ({ children }) => {
         }
     }
 
-    // previously was named - logoutCallback
     const logoutUser = () => {
         console.log("logoutUser");
         setUserData(null);

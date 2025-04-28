@@ -1,6 +1,6 @@
 {
-  "name": "iot-uu-tym-07-summer-2025",
-  "version": "0.0.1",
+  "name": "fe-iot-uu-tym-02-2024-zimni-semestr",
+  "version": "0.0.0",
   "private": true,
   "scripts": {
     "start": "nodemon --watch src --delay 1 --exec \"ts-node\" ./server.ts",

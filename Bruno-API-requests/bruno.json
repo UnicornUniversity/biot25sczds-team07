@@ -1,6 +1,6 @@
 {
   "version": "1",
-  "name": "IoT-team07-Summer-2025",
+  "name": "IoT-team2-2024-2025",
   "type": "collection",
   "ignore": [
     "node_modules",
@@ -8,6 +8,6 @@
   ],
   "presets": {
     "requestType": "http",
-    "requestUrl": "https://iot-team07-api-summer-2025.azurewebsites.net/"
+    "requestUrl": "http://localhost:8080"
   }
 }

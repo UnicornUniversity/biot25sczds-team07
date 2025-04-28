@@ -1,19 +1,24 @@
-import { JSONSchemaType } from "ajv";
-import { VALIDATION_ERRORS } from "../../errors/errorMessages";
-import { Senzor } from "../../models/MeasurementPoint";
+import { ajv, JSONSchemaType, VALIDATION_ERRORS, } from "../../../ajv-validation/ajvInstance"
 import sensorConfigSchema from "./sensorConfig.schema";
+import { MeasuredQuantity, SensorConfigurationDTO } from "../../../models/MeasurementPoint";
 
+export interface AddSensor {
+    measurementPointId: string,
+    name: string,
+    quantity: MeasuredQuantity,
+    config: SensorConfigurationDTO,
+}
 
-const sensorSchema: JSONSchemaType<Senzor> = {
+export const addSensorScheme: JSONSchemaType<AddSensor> = {
     type: 'object',
     properties: {
-        sensorId: {
+        measurementPointId: {
             type: 'string',
-            format: 'uuid',
+            format: 'objectId',
             errorMessage: {
                 type: `${VALIDATION_ERRORS.TYPE} String`,
-                format: `${VALIDATION_ERRORS.FORMAT} UUID`,
-            }
+                format: `${VALIDATION_ERRORS.FORMAT} objectId`
+            },
         },
         name: {
             type: 'string',
@@ -33,8 +38,8 @@ const sensorSchema: JSONSchemaType<Senzor> = {
         },
         config: sensorConfigSchema,
     },
-    required: ['sensorId', 'name', 'quantity', 'config'],
+    required: ["measurementPointId", 'name', 'quantity', 'config'],
     additionalProperties: false,
 };
 
-export default sensorSchema;
+export const valdiateAddSensorSchema = ajv.compile(addSensorScheme);

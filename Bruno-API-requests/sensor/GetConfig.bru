@@ -1,0 +1,19 @@
+meta {
+  name: GetConfig
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{hostname}}/sensor/getConfig
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "measurementPointId": "680501e80f48c38d51d4ce92",
+    "sensorId": "680545524cd9a983c701b2fa",
+    "jwtToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2ODA1MDFlODBmNDhjMzhkNTFkNGNlOTIiLCJpYXQiOjE3NDUxNTg2MzIsImV4cCI6MTc0NTE1ODY5Mn0.b0F3_6i4d1qqG0WM5Cub58oqtdfuwFri1mqhiK8Cc10"
+  }
+}

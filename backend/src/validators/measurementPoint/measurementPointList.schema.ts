@@ -1,10 +1,10 @@
 import { ajv, JSONSchemaType, VALIDATION_ERRORS, } from "../../ajv-validation/ajvInstance"
-import { PageInfo, pageInfoSchema } from "../other_schemas/pageInfo.schema";
+import { Order, PageInfo, pageInfoSchema } from "../other_schemas/pageInfo.schema";
 
 export interface MeasurementPointListSchema {
     organisationId: string,
     pageInfo: PageInfo,
-    order?: "desc" | "asc"
+    order?: Order
 }
 
 const measurementPointListSchema: JSONSchemaType<MeasurementPointListSchema> = {

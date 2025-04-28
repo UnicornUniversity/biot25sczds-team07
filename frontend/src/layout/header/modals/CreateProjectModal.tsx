@@ -3,12 +3,11 @@ import { Col, Form, Row } from "react-bootstrap";
 
 import DefaultModal from "../../../components/modals/DefaultModal";
 import { useMainContext } from "../../../customHooks/useMainContext";
-import { } from "../../../mockData/mockProjectsAndSprints";
+
 // import { users } from "../../../mockData/mockUsers";
 
 import { ProjectIn } from "../../../models/ProjectModel"
 import { useLoggedUserContext } from '../../../customHooks/useLoggedUserContext';
-
 
 
 interface Props {

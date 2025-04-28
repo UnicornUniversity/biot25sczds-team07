@@ -1,24 +1,23 @@
 import { JSONSchemaType } from "ajv";
-import { VALIDATION_ERRORS } from "../../errors/errorMessages";
 import { TemperatureData } from "../../models/Data";
+import { SensorState } from "../../types/customTypes";
+
+
+const VALIDATION_ERRORS = {
+    TYPE: "Invalid type:",
+    MIN: "Value is below minimum:",
+    MAX: "Value is above maximum:"
+};
 
 const temperatureDataSchema: JSONSchemaType<TemperatureData> = {
     type: 'object',
     properties: {
-        dateTime: {
-            type: 'string',
-            format: 'date-time',
-            errorMessage: {
-                type: `${VALIDATION_ERRORS.TYPE} String`,
-                format: `${VALIDATION_ERRORS.FORMAT} Date-Time`,
-            },
-        },
-        epoch: {
+        timeStamp: {
             type: 'number',
             minimum: 1,
             errorMessage: {
                 type: `${VALIDATION_ERRORS.TYPE} Number`,
-                minimum: `${VALIDATION_ERRORS.MIN} 1(sec) - Unix/Epoch time`
+                minimum: `${VALIDATION_ERRORS.MIN} 1 (sec) - Unix/Epoch time`
             },
         },
         temperature: {
@@ -31,9 +30,26 @@ const temperatureDataSchema: JSONSchemaType<TemperatureData> = {
                 maximum: `${VALIDATION_ERRORS.MAX} 80`
             },
         },
+        state: {
+            type: "number",
+            enum: [SensorState.COOLING, SensorState.HEATING, SensorState.IDLE],
+            errorMessage: {
+                type: `${VALIDATION_ERRORS.TYPE} Enum`,
+                enum: `Invalid state value`
+            }
+        }
     },
-    required: ['dateTime', 'epoch', 'temperature'],
+    required: ['timeStamp', 'temperature', 'state'],
     additionalProperties: false,
+    errorMessage: {
+        type: "Invalid data type",
+        required: {
+            timeStamp: "timeStamp is required",
+            temperature: "temperature is required",
+            state: "state is required"
+        },
+        additionalProperties: "No additional properties allowed"
+    }
 };
 
 export default temperatureDataSchema;

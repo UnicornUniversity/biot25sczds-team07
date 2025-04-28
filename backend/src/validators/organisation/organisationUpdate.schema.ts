@@ -1,12 +1,12 @@
 
 import { ajv, JSONSchemaType, VALIDATION_ERRORS, } from "../../ajv-validation/ajvInstance"
 import { OrganisationUser } from "../../models/Organisation";
-import { organisationUserSchema } from "../other_schemas/organisationUser.schema";
+import { OrganisationUserSchema, organisationUserSchema } from "../other_schemas/organisationUser.schema";
 export interface OrganisationUpdateSchema {
     id: string,
     name?: string,
     description?: string,
-    users?: OrganisationUser[],
+    users?: OrganisationUserSchema[],
 }
 
 const organisationUpdateSchema: JSONSchemaType<OrganisationUpdateSchema> = {
@@ -22,10 +22,10 @@ const organisationUpdateSchema: JSONSchemaType<OrganisationUpdateSchema> = {
         name: {
             type: 'string',
             nullable: true,
-            minLength: 5,
+            minLength: 3,
             maxLength: 255,
             errorMessage: {
-                minLength: `${VALIDATION_ERRORS.MIN_LENGTH} 5 character`,
+                minLength: `${VALIDATION_ERRORS.MIN_LENGTH} 3 character`,
                 maxLength: VALIDATION_ERRORS.MAX_LENGTH,
                 type: `${VALIDATION_ERRORS.TYPE} String`,
             },

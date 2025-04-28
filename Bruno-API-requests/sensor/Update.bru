@@ -1,0 +1,28 @@
+meta {
+  name: Update
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{hostname}}/sensor/update
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "measurementPointId": "680501e80f48c38d51d4ce92",
+    "sensorId": "680545524cd9a983c701b2fa",
+    // "name": "Temperature Sensor",
+    // "quantity": "temperature", // "temperature" or "acceleration"
+    "config": {
+      "sendInterval": 3600, //seconds
+      "measureInterval": 600,
+      "temperatureLimits": {
+        "cooling": 24, // starts cooling when temp exceedes this number
+        "heating": 15 // starts heating when tepm drops bellow this number
+      }
+    }
+  }
+}

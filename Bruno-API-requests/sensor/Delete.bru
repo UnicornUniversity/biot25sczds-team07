@@ -1,0 +1,18 @@
+meta {
+  name: Delete
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{hostname}}/sensor/delete
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+      "measurementPointId": "680501e80f48c38d51d4ce92",
+      "sensorId": "680545524cd9a983c701b2fa"   
+  }
+}

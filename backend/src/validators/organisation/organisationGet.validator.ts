@@ -16,7 +16,7 @@ export const organisationGetValidator = async (
     const isValid = validateOrganisationGet(req.params);
     if (!isValid && validateOrganisationGet.errors) { // If schema validation failed and error occured return with formatted error message 
         const error = await parseErrors(validateOrganisationGet.errors);
-        res.status(400).json({ errorMap: { ...req.errorMap, ["invalidDtoIn"]: JSON.stringify(error) } });
+        res.status(400).json({ errorMap: { ...req.errorMap, ["invalidDtoIn"]: error } });
         return;
     }
     next(); // If no error occured proceed further

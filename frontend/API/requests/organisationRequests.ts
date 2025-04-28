@@ -1,61 +1,58 @@
 import apiClient from "../axiosInstance"
+import { BaseEntity, PaginatedRequest, PaginatedResponse } from "../types/basic";
 import { Policy } from "./userRequests";
-import { Order, PageInfo } from "../types";
 
-const organisationUrlPrefix = "/organisation"
+const URL_PREFIX = "/organisation"
 
-export type OrganisationUser = {
-    policy: Policy, id: string // ObjectId
+export interface OrganisationUser {
+    id: string
+    policy: Policy,
+
 }
 
-export type Organisation = {
-    _id: string
+export interface Organisation extends BaseEntity {
     name: string,
     description: string,
     users: OrganisationUser[],
     bucketToken: string,
-    createdEpoch: number,
-    updatedEpoch: number,
 }
 
-export type AddOrganisation = {
+export interface AddOrganisationDtoIn {
     name: string,
     description?: string,
 }
-const addOrganisation = async (addOrganisation: AddOrganisation) => {
-    const response = await apiClient.post(`${organisationUrlPrefix}/add`, addOrganisation);
+const addOrganisation = async (addOrganisation: AddOrganisationDtoIn) => {
+    const response = await apiClient.post(`${URL_PREFIX}/add`, addOrganisation);
     return response.data as Organisation;
 }
 
 const deleteOrganisation = async (id: string) => {
-    const response = await apiClient.post(`${organisationUrlPrefix}/delete`, { id });
+    const response = await apiClient.post(`${URL_PREFIX}/delete`, { id });
     return response.status === 202
 }
 
-export type UpdateOrganisation = {
+export interface UpdateOrganisationDtoIn {
     id: string,
     name?: string,
     description?: string,
     users?: OrganisationUser[],
 }
-const updateOrganisation = async (updateOrganisation: UpdateOrganisation) => {
-    const response = await apiClient.post(`${organisationUrlPrefix}/update`, updateOrganisation);
+const updateOrganisation = async (updateOrganisation: UpdateOrganisationDtoIn) => {
+    const response = await apiClient.post(`${URL_PREFIX}/update`, updateOrganisation);
     return response.data as Organisation
 }
 
 const getOrganisation = async (id: string) => {
-    const response = await apiClient.get(`${organisationUrlPrefix}/${id}`);
+    const response = await apiClient.get(`${URL_PREFIX}/${id}`);
     return response.data as Organisation
 }
 
-
-export type ListOrganisation = {
-    pageInfo: PageInfo,
-    order: Order,
+export interface ListOrganisationDtoOut extends PaginatedResponse {
+    organisations: Organisation[],
 }
-const listOrganisation = async (listOrganisation: ListOrganisation) => {
-    const response = await apiClient.post(`${organisationUrlPrefix}/list`, listOrganisation);
-    return response.data as { organisations: Organisation[], pageInfo: PageInfo & { total: number } }
+const listOrganisation = async (listOrganisation: PaginatedRequest) => {
+    const response = await apiClient.post(`${URL_PREFIX}/list`, listOrganisation);
+    return response.data as ListOrganisationDtoOut;
 }
 
 

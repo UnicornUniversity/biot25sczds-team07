@@ -1,85 +1,82 @@
 import apiClient from "../axiosInstance"
-import { Order, PageInfo } from "../types";
+import { BaseEntity, PageInfo, PaginatedRequest } from "../types/basic";
 
-const userUrlPrefix = "/user"
+const URL_PREFIX = "/user"
 
 export enum Policy {
     Admin = 0,
     Member = 1
 }
-
-export type User = {
-    _id: string,
+export interface User extends BaseEntity {
     firstName: string,
     lastName: string,
     email: string,
-    // password: string,
     role: Policy,
-    createdEpoch: number,
-    updatedEpoch: number,
 }
 
-export type RegisterUser = {
+
+
+export interface RegisterUserDtoIn {
     firstName: string,
     lastName: string,
     email: string,
     password: string,
     role: Policy,
 }
-const registerUser = async (addUser: RegisterUser) => {
-    const response = await apiClient.post(`${userUrlPrefix}/register`, addUser);
+const registerUser = async (addUser: RegisterUserDtoIn) => {
+    const response = await apiClient.post(`${URL_PREFIX}/register`, addUser);
     return response.data as User;
 }
 
-export type AuthorizeCredentials = {
+
+
+export interface AuthorizeUserDtoIn {
     email: string,
     password: string,
     token?: string,
 }
-export type AuthorizedUser = User & { token: string };
-const authorize = async (credentials: AuthorizeCredentials) => {
-    const response = await apiClient.post(`${userUrlPrefix}/authorize`, credentials);
+export interface AuthorizedUser extends User { token: string };
+const authorize = async (credentials: AuthorizeUserDtoIn) => {
+    const response = await apiClient.post(`${URL_PREFIX}/authorize`, credentials);
     return response.data as AuthorizedUser;
 }
 
-export type DeleteUser = {
-    id: string,
-}
-const deleteUser = async (identificator: DeleteUser) => {
-    const response = await apiClient.post(`${userUrlPrefix}/delete`, identificator);
-    return response.data;
+
+const deleteUser = async (id: string) => {
+    const response = await apiClient.post(`${URL_PREFIX}/delete`, { id });
+    return response.status === 202;
 }
 
-export type UpdateUser = {
-    id: string
+export interface UpdateUserDtoIn {
+    _id: string
     firstName?: string,
     lastName?: string,
     email?: string,
-    password?: string,
     role?: Policy,
 }
-const updateUser = async (updateUser: UpdateUser) => {
-    const response = await apiClient.post(`${userUrlPrefix}/update`, updateUser);
-    return response.data;
+const updateUser = async (updateUser: UpdateUserDtoIn) => {
+    const response = await apiClient.post(`${URL_PREFIX}/update`, updateUser);
+    return response.data as User;
 }
 
 const getUser = async (id: string) => {
-    const response = await apiClient.get(`${userUrlPrefix}/get/${id}`);
-    return response.data;
+    const response = await apiClient.get(`${URL_PREFIX}/get/${id}`);
+    return response.data as User;
 }
 
-export type ListUsers = {
+export interface ListUsersDtoIn extends PaginatedRequest {
     findEmailString: string,
-    pageInfo: PageInfo,
-    order: Order,
 }
-const listUsersByEmail = async (filter: ListUsers) => {
-    const response = await apiClient.post(`${userUrlPrefix}/list`, filter);
-    return response.data;
+export interface ListUsersDtoOut {
+    users: User[],
+    pageInfo: PageInfo,
+}
+const listUsersByEmail = async (filter: ListUsersDtoIn) => {
+    const response = await apiClient.post(`${URL_PREFIX}/list`, filter);
+    return response.data as ListUsersDtoOut;
 }
 
 const userRequests = {
-    Policy,
     registerUser,
     authorize,
     deleteUser,

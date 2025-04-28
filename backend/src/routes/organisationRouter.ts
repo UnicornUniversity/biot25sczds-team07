@@ -33,7 +33,7 @@ organisationRouter.post(
 
         try {
             const { name, description } = req.body;
-            const userId = req.userId ?? "";
+            const userId = new ObjectId(req.userId ?? "");
 
             const epochNow = dayjs().unix();
 
@@ -42,8 +42,7 @@ organisationRouter.post(
                 description: description ?? "",
                 users: [{ policy: Policy.Admin, id: userId }],
                 bucketToken: "", // TODO - add logic for creating bucket Token (will be used by measurment points to insert data into InfluxDB)
-                createdEpoch: epochNow,
-                updatedEpoch: epochNow,
+                created: epochNow,
             }
 
             const result = await collections.organisations.insertOne(newOrganisation);
@@ -65,12 +64,12 @@ organisationRouter.post(
                 );
                 if (createdOrganisation) {
                     res.status(201).json({ ...createdOrganisation, errorMap: req.errorMap });
-                } else {
-                    res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: "Failed to fetch the created Organisation Document" } });
+                    return;
                 }
-            } else {
-                res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: "Insert operation failed" } });
+                res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: "Failed to fetch the created Organisation Document" } });
+                return;
             }
+            res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: "Insert operation failed" } });
         } catch (error) {
             if (error instanceof Error) {
                 console.error(error.message);
@@ -100,9 +99,10 @@ organisationRouter.post(
             const organisationId = req.body.id;
             const userId = req.userId ?? "";
 
-            console.log("organisation/delete - userId: ", userId);
+            // console.log("organisation/delete - userId: ", userId);
 
-            const userHasAccess = await validateUserHasAdminAccessToOrg(userId, organisationId);
+            const organisationObjectId = new ObjectId(organisationId)
+            const userHasAccess = await validateUserHasAdminAccessToOrg(userId, organisationObjectId);
             if (userHasAccess.code === 500 || userHasAccess.code === 404) {
                 const isAppAdmin = await isUserAdmin(userId);
                 if (!isAppAdmin) {
@@ -112,26 +112,36 @@ organisationRouter.post(
                 }
             }
 
-            const deletedResult = await collections.organisations.deleteOne({
-                _id: new ObjectId(organisationId),
-                users: {
-                    $elemMatch: {
-                        id: userId,
-                        policy: Policy.Admin
+            const deleteObjectId = new ObjectId(organisationId);
+            const deletedResult = await collections.organisations.updateOne(
+                {
+                    _id: deleteObjectId,
+                    deleted: { $exists: false },
+                    users: {
+                        $elemMatch: {
+                            id: new ObjectId(userId),
+                            policy: Policy.Admin
+                        }
                     }
-                }
-            });
-            if (deletedResult.deletedCount < 1) {
+                },
+                { $set: { deleted: dayjs().unix() } }
+            );
+            if (deletedResult.modifiedCount < 1) {
                 res.status(404).json({ errorMap: { ...req.errorMap, ["404"]: `Organisation with this id: ${organisationId} doesn't exist.` } });
                 return;
-            } else if (deletedResult.acknowledged && deletedResult.deletedCount > 0) {
-                const deletedMeasurementPoints = await collections.measurementPoints.deleteMany({
-                    organisationId,
-                });
-                res.status(202).json({ errorMap: req.errorMap });
-            } else {
-                res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: "Delete operation failed" } });
             }
+            if (deletedResult.acknowledged) {
+                const deletedMeasurementPoints = await collections.measurementPoints.updateMany(
+                    {
+                        deleted: { $exists: false },
+                        organisationId: deleteObjectId,
+                    },
+                    { $set: { deleted: dayjs().unix() } }
+                );
+                res.status(202).json({ errorMap: req.errorMap });
+                return;
+            }
+            res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: "Delete operation failed" } });
         } catch (error) {
             if (error instanceof Error) {
                 console.error(error.message);
@@ -159,8 +169,8 @@ organisationRouter.post(
         try {
             const { id, name, description, users } = req.body;
             const userId = req.userId ?? "";
-
-            const userHasAccess = await validateUserHasAdminAccessToOrg(userId, id);
+            const organisationObjectId = new ObjectId(id)
+            const userHasAccess = await validateUserHasAdminAccessToOrg(userId, organisationObjectId);
             if (userHasAccess.code === 500 || userHasAccess.code === 404) {
                 const isAppAdmin = await isUserAdmin(userId);
                 if (!isAppAdmin) {
@@ -172,17 +182,18 @@ organisationRouter.post(
 
             // Define the update fields
             const updateFields: {
-                updatedEpoch: number,
+                updated: number,
                 name?: string,
                 description?: string,
                 users?: OrganisationUser[],
-            } = { updatedEpoch: dayjs().unix() };
-            if (typeof name === "string") { updateFields.name = name; }
-            if (typeof description === "string") { updateFields.description = description }
+            } = { updated: dayjs().unix() };
+            if (name) { updateFields.name = name; }
+            if (description) { updateFields.description = description }
             if (users) {
                 const userIds = users.map(user => new ObjectId(user.id));
                 const usersThatExist = await collections.users.find({
-                    _id: { $in: userIds }
+                    _id: { $in: userIds },
+                    deleted: { $exists: false }
                 }).toArray();
 
                 if (usersThatExist.length !== userIds.length) {
@@ -191,15 +202,21 @@ organisationRouter.post(
                     res.status(400).json(req.errorMap);
                     return;
                 }
-                updateFields.users = users;
+                updateFields.users = users.map((user) => {
+                    return {
+                        ...user,
+                        id: new ObjectId(user.id),
+                    }
+                });
             }
 
             const result = await collections.organisations.updateOne(
                 {
                     _id: new ObjectId(req.body.id),
+                    deleted: { $exists: false },
                     users: {
                         $elemMatch: {
-                            id: userId,
+                            id: new ObjectId(userId),
                             policy: Policy.Admin
                         }
                     }
@@ -213,9 +230,9 @@ organisationRouter.post(
             const updatedOrganisation = await collections.organisations.findOne({ _id: new ObjectId(id) });
             if (updatedOrganisation) {
                 res.status(200).json({ ...updatedOrganisation, errorMap: req.errorMap });
-            } else {
-                res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: "Failed to fetch the updated Organisation" } });
+                return;
             }
+            res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: "Failed to fetch the updated Organisation" } });
         } catch (error) {
             if (error instanceof Error) {
                 console.error(error.message);
@@ -243,23 +260,23 @@ organisationRouter.get(
 
         const organisationId = req?.params?.id;
         const userId = req.userId ?? "";
-        const query = {
-            _id: new ObjectId(organisationId),
-            users: {
-                $elemMatch: {
-                    id: userId,
-                }
-            }
-        }
 
         try {
 
-            const organisation = await collections.organisations.findOne(query);
+            const organisation = await collections.organisations.findOne({
+                _id: new ObjectId(organisationId),
+                deleted: { $exists: false },
+                users: {
+                    $elemMatch: {
+                        id: new ObjectId(userId),
+                    }
+                }
+            });
             if (organisation) {
                 res.status(200).json({ ...organisation, errorMap: req.errorMap });
-            } else {
-                res.status(404).json({ errorMap: { ...req.errorMap, ["404"]: `Unable to find matching Organisation with id: ${organisationId}` } });
+                return;
             }
+            res.status(404).json({ errorMap: { ...req.errorMap, ["404"]: `Unable to find matching Organisation with id: ${organisationId}` } });
         } catch (error) {
             if (error instanceof Error) {
                 console.error(error.message);
@@ -290,33 +307,34 @@ organisationRouter.post(
             const { pageInfo = { pageIndex: 0, pageSize: 20 }, order = "asc" } = req.body;
             const userId = req.userId ?? "";
 
-            const queryFilter = [
-                // Match documents based on the filtering conditions
-                {
-                    $match: {
-                        "users.id": userId,
-                    }
-                },
-                {
-                    $facet: {
-                        totalCount: [{ $count: "count" }], // Count total matching documents
-                        paginatedResults: [
-                            { $sort: { name: (order === "desc" ? -1 : 1) } }, // Sort by name field
-                            { $skip: pageInfo.pageIndex * pageInfo.pageSize }, // Skip for pagination
-                            { $limit: pageInfo.pageSize }, // Limit to page size
-                        ],
+            const organisations = await collections.organisations
+                .aggregate([
+                    {
+                        $match: {
+                            deleted: { $exists: false },
+                            "users.id": new ObjectId(userId),
+                        }
                     },
-                },
-            ];
-            const organisations = await collections.organisations.aggregate(queryFilter).toArray();
+                    {
+                        $facet: {
+                            totalCount: [{ $count: "count" }], // Count total matching documents
+                            paginatedResults: [
+                                { $sort: { name: (order === "desc" ? -1 : 1) } }, // Sort by name field
+                                { $skip: pageInfo.pageIndex * pageInfo.pageSize }, // Skip for pagination
+                                { $limit: pageInfo.pageSize }, // Limit to page size
+                            ],
+                        },
+                    },
+                ])
+                .toArray();
             const totalCount = organisations[0]?.totalCount[0]?.count || 0; // Total count of matching documents
             const paginatedResults = organisations[0]?.paginatedResults || []; // Paginated results
 
             if (Array.isArray(paginatedResults)) {
                 res.status(200).json({ organisations: paginatedResults, pageInfo: { ...pageInfo, total: totalCount } });
-            } else {
-                res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: "Failed to fetch the organisations" } });
+                return;
             }
+            res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: "Failed to fetch the organisations" } });
         } catch (error) {
             if (error instanceof Error) {
                 console.error(error.message);

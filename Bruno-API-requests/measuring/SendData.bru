@@ -5,19 +5,24 @@ meta {
 }
 
 post {
-  url: http://localhost:8080/measuring/sendData
+  url: {{hostname}}/measuring/sendData
   body: json
   auth: none
 }
 
 body:json {
   {
-    "sensorId": "2617e68a-621e-4c2f-8350-36322d009f26",
+    "measurementPointId": "680501e80f48c38d51d4ce92",
+    "sensorId": "680545524cd9a983c701b2fa",
+    "jwtToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2ODA1MDFlODBmNDhjMzhkNTFkNGNlOTIiLCJpYXQiOjE3NDUxNTg2MzIsImV4cCI6MTc0NTE1ODY5Mn0.b0F3_6i4d1qqG0WM5Cub58oqtdfuwFri1mqhiK8Cc10",
     "tempData": [
       {
-        "epoch": 1737119535,
-        "dateTime": "2025-01-17T00:00:00Z",
-        "temperature": 15
+        "timeStamp": 1737119535,
+        "temperature": 15,
+        "state": 1
+        // IDLE = 1,
+        // COOLING = 2,
+        // HEATING = 3,
       }
     ]
   }

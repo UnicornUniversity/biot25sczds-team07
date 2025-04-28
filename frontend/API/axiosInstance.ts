@@ -1,10 +1,13 @@
 import axios from "axios";
 
-// TODO - add correct configuration
 const apiClient = axios.create({
-    baseURL: 'https://api.example.com', // Replace with your base URL
+    baseURL: 'http://localhost:8080', // Replace with your base URL
     timeout: 1000, // Optional: specify a timeout in milliseconds
-    headers: { 'Content-Type': 'application/json' } // Optional: set default headers
+    headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': 'http://localhost:8080',
+    }, // Optional: set default headers
+
 });
 
 // Add a request interceptor

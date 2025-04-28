@@ -5,26 +5,26 @@ meta {
 }
 
 post {
-  url: http://localhost:8080/organisation/update
+  url: {{hostname}}/organisation/update
   body: json
   auth: inherit
 }
 
 body:json {
   {
-    "id": "678a4c8878474dee5467222a",
+    "id": "680244c4c296c283e829f082",
     // only id is mandatory, other attributes can be undefined
     // "name": "Nové jméno pro organizaci",
-    // "description": "Nový popisek",
-    "users": [
-      { // emil
-        "policy": 0,
-        "id": "678808b322dc25165954fcea"
-      },
-      { // jarda
-        "policy": 1,
-        "id": "678a4d7978474dee5467222b"
-      }
-    ]
+    "description": "Provedena změna popisku"
+    // "users": [
+    //   { // emil
+    //     "policy": 0,
+    //     "id": "678808b322dc25165954fcea"
+    //   },
+    //   { // jarda
+    //     "policy": 1,
+    //     "id": "678a4d7978474dee5467222b"
+    //   }
+    // ]
   }
 }

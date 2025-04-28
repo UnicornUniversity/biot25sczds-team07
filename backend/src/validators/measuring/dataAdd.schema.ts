@@ -3,6 +3,8 @@ import { TemperatureData } from "../../models/Data";
 import temperatureDataSchema from "../other_schemas/temperatureData.scheme";
 
 export interface DataAdd {
+    measurementPointId: string,
+    jwtToken: string,
     sensorId: string,
     tempData: TemperatureData[],
 }
@@ -10,12 +12,26 @@ export interface DataAdd {
 const dataAddScheme: JSONSchemaType<DataAdd> = {
     type: 'object',
     properties: {
-        sensorId: {
+        measurementPointId: {
             type: 'string',
-            format: 'uuid',
+            format: 'objectId',
             errorMessage: {
                 type: `${VALIDATION_ERRORS.FORMAT} String`,
-                format: `${VALIDATION_ERRORS.FORMAT} UUID`,
+                format: `${VALIDATION_ERRORS.FORMAT} objectId`,
+            },
+        },
+        jwtToken: {
+            type: 'string',
+            errorMessage: {
+                type: `${VALIDATION_ERRORS.FORMAT} String`,
+            },
+        },
+        sensorId: {
+            type: 'string',
+            format: 'objectId',
+            errorMessage: {
+                type: `${VALIDATION_ERRORS.FORMAT} String`,
+                format: `${VALIDATION_ERRORS.FORMAT} objectId`,
             },
         },
         tempData: {
@@ -26,7 +42,7 @@ const dataAddScheme: JSONSchemaType<DataAdd> = {
             },
         },
     },
-    required: ['sensorId', 'tempData'],
+    required: ["measurementPointId", "jwtToken", 'sensorId', 'tempData'],
     additionalProperties: false,
 };
 

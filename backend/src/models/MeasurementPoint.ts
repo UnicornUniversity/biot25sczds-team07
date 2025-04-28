@@ -1,33 +1,34 @@
 import { ObjectId } from "mongodb";
-import { TemperatureRange } from "../validators/other_schemas/temperatureRange.schema";
-
-export type SenzorConfiguration = {
-    epochCreated: number,
-    interval: number,
+import { BaseEntity } from "./BaseEntity";
+export interface SensorConfigurationDTO {
+    sendInterval: number,
+    measureInterval: number,
     temperatureLimits: {
-        cooling: TemperatureRange,
-        idle: TemperatureRange,
-        heating: TemperatureRange,
+        // °C
+        cooling: number, // if temperature is above this number => start cooling
+        heating: number // if temperature is below this number => start heating
     }
 }
-
-export type Senzor = {
-    name: string,
-    quantity: "temperature" | "acceleration"
-    sensorId: string,
-    config: SenzorConfiguration
+export interface SenzorConfiguration extends SensorConfigurationDTO {
+    created: number,
 }
 
-export default class MeasurementPoint {
-    constructor(
-        public organisationId: ObjectId,
-        public name: string,
-        public description: string,
-        public influxMeasurement: string,
-        public creatorId: string,
-        public sensors: Senzor[],
-        public createdEpoch: number,
-        public updatedEpoch: number,
-        public _id?: ObjectId
-    ) { }
+export type MeasuredQuantity = "temperature" | "acceleration";
+export interface Sensor {
+    sensorId: string,
+    name: string,
+    quantity: MeasuredQuantity,
+    config: SenzorConfiguration,
+    created: number,
+    edited?: number,
+    deleted?: number
+}
+
+export default interface MeasurementPoint extends BaseEntity {
+    organisationId: ObjectId,
+    ownerId: string,
+    name: string,
+    description: string,
+    jwtToken: string,
+    sensors: Sensor[],
 }

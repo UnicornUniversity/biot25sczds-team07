@@ -19,7 +19,6 @@ import { UserAuthorizeRequest, userAuthorizeValidator } from '../validators/user
 
 const userRouter = Router();
 
-
 userRouter.post(
     "/register",
     // authorizeJWTToken,
@@ -42,10 +41,12 @@ userRouter.post(
             if (token) {
                 const userId = verifyToken(token);
                 if (typeof userId === "string") {
-                    const user = await collections.users.findOne({ _id: userId, role: Policy.Admin });
-                    if (user) {
-                        isAdmin = true;
-                    }
+                    const user = await collections.users.findOne({
+                        _id: userId,
+                        role: Policy.Admin,
+                        deleted: { $exists: false }
+                    });
+                    if (user) { isAdmin = true; }
                 }
             }
 
@@ -64,8 +65,7 @@ userRouter.post(
                 email,
                 password: await hashPassword(password),
                 role: isAdmin ? role : Policy.Member,
-                createdEpoch: epochNow,
-                updatedEpoch: epochNow,
+                created: epochNow,
             }
 
             const result = await collections.users.insertOne(newUser);
@@ -80,17 +80,17 @@ userRouter.post(
             );
             if (createdUser) {
                 res.status(201).json({ ...createdUser, errorMap: req.errorMap });
-            } else {
-                res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: "Failed to fetch the created User Document" } });
+                return;
             }
+            res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: "Failed to fetch the created User Document" } });
         } catch (error) {
             if (error instanceof Error) {
                 console.error(error.message);
                 res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: error.message } });
-            } else {
-                console.error("An unknown error occurred: ", error);
-                res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: "An unknown error occurred" } });
+                return;
             }
+            console.error("An unknown error occurred: ", error);
+            res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: "An unknown error occurred" } });
         }
     }
 );
@@ -110,7 +110,6 @@ userRouter.post(
 
         try {
             const { email, password, token } = req.body;
-
             if (token) {
                 const result = await verifyToken(token);
                 if (result === 500) {
@@ -124,7 +123,10 @@ userRouter.post(
                     return;
                 }
                 const user = await collections.users.findOne(
-                    { _id: new ObjectId(result) },
+                    {
+                        _id: new ObjectId(result),
+                        deleted: { $exists: false }
+                    },
                     { projection: { password: 0 } }
                 );
                 if (user) {
@@ -132,31 +134,42 @@ userRouter.post(
                     return;
                 }
                 res.status(403).json({ errorMap: { ...req.errorMap, ["403"]: `Unauthorized` } });
-            }
-            else if (email && password) {
-                const dbUser = await collections.users.findOne(
-                    {
-                        email: email,
-                    },
-                );
-                if (!dbUser) {
-                    req.errorMap["403"] = "Unauthorized";
-                    res.status(403).json({ errorMap: req.errorMap });
-                    return;
-                }
-                const verifiedPassword = await bcrypt.compare(password, dbUser.password as string);
-                if (!verifiedPassword) {
-                    req.errorMap["403"] = "Unauthorized";
-                    res.status(403).json({ errorMap: req.errorMap });
-                    return;
-                }
-                const generatedToken = generateToken({ id: dbUser._id.toString() });
-                delete dbUser.password;
-                res.status(200).json({ ...dbUser, token: generatedToken, errorMap: req.errorMap });
                 return;
             }
 
-            res.sendStatus(401); // Unauthorized if no token is present
+            if (!email || !password) {
+                res.sendStatus(401); // Unauthorized if no token is present
+                return;
+            }
+
+            const dbUser = await collections.users.findOne(
+                {
+                    email,
+                    deleted: { $exists: false }
+                },
+            );
+            if (!dbUser) {
+                req.errorMap["403"] = "Unauthorized";
+                res.status(403).json({ errorMap: req.errorMap });
+                return;
+            }
+            const verifiedPassword = await bcrypt.compare(password, dbUser.password);
+            if (!verifiedPassword) {
+                req.errorMap["403"] = "Unauthorized";
+                res.status(403).json({ errorMap: req.errorMap });
+                return;
+            }
+            const generatedToken = generateToken({ id: dbUser._id.toString() });
+            const userWithoutPassword = {
+                _id: dbUser._id,
+                firstName: dbUser.firstName,
+                lastName: dbUser.lastName,
+                email: dbUser.email,
+                role: dbUser.role,
+                created: dbUser.created,
+                updated: dbUser.updated
+            };
+            res.status(200).json({ ...userWithoutPassword, token: generatedToken, errorMap: req.errorMap });
         } catch (error) {
             if (error instanceof Error) {
                 console.error(error.message);
@@ -195,19 +208,25 @@ userRouter.post(
                 }
             }
 
-            const deletedResult = await collections.users.deleteOne({
-                _id: new ObjectId(toDeleteUserId),
-            });
-            if (deletedResult.deletedCount < 1) {
+            const toDeleteId = new ObjectId(toDeleteUserId);
+            const deletedResult = await collections.users.updateOne(
+                {
+                    _id: toDeleteId,
+                    deleted: { $exists: false }
+                },
+                { $set: { deleted: dayjs().unix() } }
+            );
+            if (deletedResult.matchedCount < 1) {
                 res.status(404).json({ errorMap: { ...req.errorMap, ["404"]: `User with this id: ${toDeleteUserId} doesn't exist.` } });
                 return;
-            } else if (deletedResult.acknowledged) {
+            }
+            if (deletedResult.acknowledged) {
                 await collections.organisations.updateMany(
                     {},
                     {
-                        // @ts-expect-error - There is hardly any workaround this thing in typescript (according to git issue from 2021)
+                        // @ts-expect-error
                         $pull: {
-                            users: { id: toDeleteUserId },
+                            users: { id: toDeleteId },
                         },
                     }
                 )
@@ -240,17 +259,16 @@ userRouter.post(
             return;
         }
 
-        const { id, firstName = "", lastName = "", email = "", password = "", role } = req.body;
+        // const { _id, firstName = "", lastName = "", email = "", role } = req.body;
+        const updateUser = req.body;
         const userId = req.userId ?? "";
         try {
 
             const isAdmin = await isUserAdmin(userId);
-            if (userId !== id) {
-                if (!isAdmin) {
-                    req.errorMap["403"] = "Signed user is not admin and is trying to update different user than him self.";
-                    res.status(403).json(req.errorMap);
-                    return;
-                }
+            if (userId !== updateUser._id && !isAdmin) {
+                req.errorMap["403"] = "Signed user is not admin and is trying to update different user than him self.";
+                res.status(403).json(req.errorMap);
+                return;
             }
 
             // Define the update fields
@@ -258,37 +276,38 @@ userRouter.post(
                 firstName?: string,
                 lastName?: string,
                 email?: string,
-                password?: string, // hash 
                 role?: Policy,
-                updatedEpoch: number,
-            } = { updatedEpoch: dayjs().unix() };
-            if (firstName) { updateFields.firstName = firstName; }
-            if (lastName) { updateFields.lastName = lastName; }
-            if (email) { updateFields.email = email; }
-            if (password) { updateFields.password = password; }
-            if (isAdmin && typeof role === "number") {
-                updateFields.role = role;
-            }
+                updated: number
+            } = { updated: dayjs().unix() };
+            if (updateUser.firstName) { updateFields.firstName = updateUser.firstName; }
+            if (updateUser.lastName) { updateFields.lastName = updateUser.lastName; }
+            if (updateUser.email) { updateFields.email = updateUser.email; }
+            // if (updateUser.password) { updateFields.password = updateUser.password; }
+            if (isAdmin && typeof updateUser?.role === "number") { updateFields.role = updateUser.role }
 
+            const updatedUserId = new ObjectId(updateUser._id);
             const result = await collections.users.updateOne(
                 {
-                    _id: new ObjectId(id),
+                    _id: updatedUserId,
+                    deleted: { $exists: false }
                 },
-                { $set: updateFields }
+                {
+                    $set: updateFields
+                }
             );
             if (result.matchedCount < 1) {
-                res.status(404).json({ errorMap: { ...req.errorMap, ["404"]: `There is no such User with id: ${id}` } });
+                res.status(404).json({ errorMap: { ...req.errorMap, ["404"]: `There is no such User with id: ${updateUser._id}` } });
                 return;
             }
             const updatedUser = await collections.users.findOne(
-                { _id: new ObjectId(id) },
+                { _id: updatedUserId },
                 { projection: { password: 0 } }
             );
             if (updatedUser) {
                 res.status(200).json({ ...updatedUser, errorMap: req.errorMap });
-            } else {
-                res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: "Failed to fetch the updated User" } });
+                return;
             }
+            res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: "Failed to fetch the updated User" } });
         } catch (error) {
             if (error instanceof Error) {
                 console.error(error.message);
@@ -318,7 +337,10 @@ userRouter.get(
 
         try {
             const user = await collections.users.findOne(
-                { _id: new ObjectId(getUserId) },
+                {
+                    _id: new ObjectId(getUserId),
+                    deleted: { $exists: false }
+                },
                 { projection: { password: 0 } }
             );
             if (user) {
@@ -330,10 +352,10 @@ userRouter.get(
             if (error instanceof Error) {
                 console.error(error.message);
                 res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: error.message } });
-            } else {
-                console.error("An unknown error occurred", error);
-                res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: "An unknown error occurred" } });
+                return;
             }
+            console.error("An unknown error occurred", error);
+            res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: "An unknown error occurred" } });
         }
     }
 )
@@ -356,33 +378,35 @@ userRouter.post(
             const { findEmailString, pageInfo = { pageIndex: 0, pageSize: 20 }, order = "asc" } = req.body;
             // const userId = req.userId ?? "";
 
-            const queryFilter = [
-                {
-                    $match: {
-                        email: { $regex: findEmailString, $options: 'i' } // Case-insensitive search
-                    }
-                },
-                {
-                    $facet: {
-                        totalCount: [{ $count: "count" }], // Count total matching documents
-                        paginatedResults: [
-                            { $sort: { name: (order === "desc" ? -1 : 1) } }, // Sort by name field
-                            { $skip: pageInfo.pageIndex * pageInfo.pageSize }, // Skip for pagination
-                            { $limit: pageInfo.pageSize }, // Limit to page size
-                            { $project: { password: 0 } } // Exclude the password field
-                        ],
+            const users = await collections.users
+                .aggregate([
+                    {
+                        $match: {
+                            deleted: { $exists: false },
+                            email: { $regex: findEmailString, $options: 'i' } // Case-insensitive search
+                        }
                     },
-                },
-            ];
-            const users = await collections.users.aggregate(queryFilter).toArray();
+                    {
+                        $facet: {
+                            totalCount: [{ $count: "count" }], // Count total matching documents
+                            paginatedResults: [
+                                { $sort: { name: (order === "desc" ? -1 : 1) } }, // Sort by name field
+                                { $skip: pageInfo.pageIndex * pageInfo.pageSize }, // Skip for pagination
+                                { $limit: pageInfo.pageSize }, // Limit to page size
+                                { $project: { password: 0 } } // Exclude the password field
+                            ],
+                        },
+                    },
+                ])
+                .toArray();
             const totalCount = users[0]?.totalCount[0]?.count || 0; // Total count of matching documents
             const paginatedResults = users[0]?.paginatedResults || []; // Paginated results
 
             if (Array.isArray(paginatedResults)) {
                 res.status(200).json({ users: paginatedResults, pageInfo: { ...pageInfo, total: totalCount } });
-            } else {
-                res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: "Failed to fetch the Users" } });
+                return;
             }
+            res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: "Failed to fetch the Users" } });
         } catch (error) {
             if (error instanceof Error) {
                 console.error(error.message);

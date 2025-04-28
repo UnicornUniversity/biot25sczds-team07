@@ -5,17 +5,17 @@ meta {
 }
 
 post {
-  url: http://localhost:8080/user/register
+  url: {{hostname}}/user/register
   body: json
   auth: inherit
 }
 
 body:json {
   {
-     "firstName": "Jarda",
-     "lastName": "Komorník",
-     "email": "jarda@unicorn.com",
+     "firstName": "User",
+     "lastName": "Smazat",
+     "email": "test-smazani@unicorn.com",
      "password": "Heslo",
-     "role": 1 // Admin = 0, Member = 1
+     "role": 0 // Admin = 0, Member = 1
   }
 }
