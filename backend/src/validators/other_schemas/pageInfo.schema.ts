@@ -5,10 +5,11 @@ export interface PageInfo {
     pageIndex: number,
     pageSize: number
 }
-export type Order = "desc" | "asc" ;
+export type Order = "desc" | "asc";
 
-export const pageInfoSchema: JSONSchemaType<PageInfo> = {
+export const pageInfoSchema: JSONSchemaType<PageInfo | undefined> = {
     type: 'object',
+    nullable: true,
     properties: {
         pageIndex: {
             type: 'number',

@@ -1,16 +1,18 @@
 
-import { ajv, JSONSchemaType, VALIDATION_ERRORS, } from "../../ajv-validation/ajvInstance"
-import { Order, PageInfo, pageInfoSchema } from "../other_schemas/pageInfo.schema";
+import { ajv, AJV_PAGE_INFO_SCHEMA, JSONSchemaType, VALIDATION_ERRORS, } from "../../ajv-validation/ajvInstance"
+import { Order, PageInfo } from "../other_schemas/pageInfo.schema";
 
 export interface OrganisationListSchema {
-    pageInfo: PageInfo
+    pageInfo?: PageInfo
     order?: Order,
 }
 
 const organisationListSchema: JSONSchemaType<OrganisationListSchema> = {
     type: 'object',
     properties: {
-        pageInfo: pageInfoSchema,
+        pageInfo: {
+            $ref: AJV_PAGE_INFO_SCHEMA, // Reference the registered schema
+        },
         order: {
             type: 'string',
             enum: ["desc", "asc"],
@@ -20,7 +22,7 @@ const organisationListSchema: JSONSchemaType<OrganisationListSchema> = {
             },
         },
     },
-    required: ["pageInfo"],
+    required: [],
     additionalProperties: false,
 };
 

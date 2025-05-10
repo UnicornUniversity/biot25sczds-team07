@@ -1,9 +1,9 @@
-import { ajv, JSONSchemaType, VALIDATION_ERRORS, } from "../../ajv-validation/ajvInstance"
-import { Order, PageInfo, pageInfoSchema } from "../other_schemas/pageInfo.schema";
+import { ajv, AJV_PAGE_INFO_SCHEMA, JSONSchemaType, VALIDATION_ERRORS, } from "../../ajv-validation/ajvInstance"
+import { Order, PageInfo } from "../other_schemas/pageInfo.schema";
 
 export interface MeasurementPointListSchema {
     organisationId: string,
-    pageInfo: PageInfo,
+    pageInfo?: PageInfo,
     order?: Order
 }
 
@@ -17,7 +17,9 @@ const measurementPointListSchema: JSONSchemaType<MeasurementPointListSchema> = {
                 type: `${VALIDATION_ERRORS.FORMAT} ObjectId (Mongo)`,
             },
         },
-        pageInfo: pageInfoSchema,
+        pageInfo: {
+            $ref: AJV_PAGE_INFO_SCHEMA, // Reference the registered schema
+        },
         order: {
             type: 'string',
             enum: ["desc", "asc"],
@@ -27,7 +29,7 @@ const measurementPointListSchema: JSONSchemaType<MeasurementPointListSchema> = {
             },
         },
     },
-    required: ['organisationId', 'pageInfo'],
+    required: ['organisationId'],
     additionalProperties: false,
 };
 

@@ -1,10 +1,10 @@
 
-import { ajv, JSONSchemaType, VALIDATION_ERRORS, } from "../../ajv-validation/ajvInstance"
-import { Order, PageInfo, pageInfoSchema } from "../other_schemas/pageInfo.schema";
+import { ajv, AJV_PAGE_INFO_SCHEMA, JSONSchemaType, VALIDATION_ERRORS, } from "../../ajv-validation/ajvInstance"
+import { Order, PageInfo } from "../other_schemas/pageInfo.schema";
 
 export interface UserListSchema {
     findEmailString: string,
-    pageInfo: PageInfo
+    pageInfo?: PageInfo
     order?: Order,
 }
 
@@ -18,7 +18,9 @@ const userListSchema: JSONSchemaType<UserListSchema> = {
                 minLength: `${VALIDATION_ERRORS.MIN_LENGTH} 3`,
             },
         },
-        pageInfo: pageInfoSchema,
+        pageInfo: {
+            $ref: AJV_PAGE_INFO_SCHEMA, // Reference the registered schema
+        },
         order: {
             type: 'string',
             enum: ["desc", "asc"],
@@ -28,7 +30,7 @@ const userListSchema: JSONSchemaType<UserListSchema> = {
             },
         },
     },
-    required: ["findEmailString", "pageInfo"],
+    required: ["findEmailString"],
     additionalProperties: false,
 };
 

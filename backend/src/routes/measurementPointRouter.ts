@@ -185,6 +185,9 @@ measurementPointRouter.get(
                 res.status(404).json({ errorMap: { ...req.errorMap, ["404"]: `Unable to find matching Measurement Point with id: ${id}` } });
                 return;
             }
+            measurementPoint.sensors = measurementPoint.sensors.filter((sensor) => {
+                return !sensor.deleted;
+            })
 
             res.status(200).json({ ...measurementPoint, errorMap: req.errorMap });
         } catch (error) {
@@ -249,9 +252,14 @@ measurementPointRouter.post(
                 .toArray();
             const totalCount = measurementPoints[0]?.totalCount[0]?.count || 0; // Total count of matching documents
             const paginatedResults: (MeasurementPoint & { _id: ObjectId })[] = measurementPoints[0]?.paginatedResults || []; // Paginated results
-
-            if (Array.isArray(paginatedResults)) {
-                res.status(200).json({ measurementPoints: paginatedResults, pageInfo: { ...pageInfo, total: totalCount } });
+            const measurementPointsWithSensors = paginatedResults.map((mp) => {
+                mp.sensors = mp.sensors.filter((sensor) => {
+                    return !sensor.deleted;
+                })
+                return mp;
+            })
+            if (Array.isArray(measurementPointsWithSensors)) {
+                res.status(200).json({ measurementPoints: measurementPointsWithSensors, pageInfo: { ...pageInfo, total: totalCount } });
                 return;
             }
             res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: "Failed to fetch the Measurement Points" } });
@@ -342,6 +350,9 @@ measurementPointRouter.post(
                 },
             );
             if (updatedMeasurementPoint) {
+                updatedMeasurementPoint.sensors = updatedMeasurementPoint.sensors.filter((sensor) => {
+                    return !sensor.deleted;
+                })
                 res.status(200).json({ ...updatedMeasurementPoint, errorMap: req.errorMap });
             } else {
                 res.status(500).json({ errorMap: { ...req.errorMap, ["500"]: "Failed to fetch the updated Measurement Point" } });

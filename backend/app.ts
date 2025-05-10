@@ -1,6 +1,7 @@
 import createError from 'http-errors';
 import express from 'express';
 import logger from 'morgan';
+import cors from 'cors';
 import 'dotenv/config';
 
 import userRouter from './src/routes/userRouter';
@@ -12,6 +13,26 @@ import measuringRouter from './src/routes/measuringRouter';
 import sensorRouter from './src/routes/sensorRouter';
 
 const app = express();
+
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'smart-terrarium.azurewebsites.net'
+];
+
+// Enable CORS for requests from http://localhost:5173
+app.use(cors({
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        return callback(new Error('Not allowed by CORS'));
+    },
+    methods: ['GET', 'POST'], // Specify allowed HTTP methods
+    credentials: true // Allow cookies and credentials if needed
+}));
 
 app.use(logger('dev'));
 app.use(express.json());

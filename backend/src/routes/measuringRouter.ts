@@ -6,6 +6,7 @@ import { DataAddRequest, dataAddValidator } from '../validators/measuring/dataAd
 import { ObjectId } from 'mongodb';
 import { validateMeasurementPointGetJwtToken } from '../validators/measurementPoint/measurementPointGetJwtToken.schema';
 import { authorizeMpJWTToken } from '../authorization/authorizeMeasurementPoint';
+import { writeTemperatureData } from '../services/influxClient.service';
 
 const measuringRouter = Router();
 
@@ -42,7 +43,9 @@ measuringRouter.post(
             }
 
             console.log("/sendData - tempData: ", tempData);
-            // TODO - send data into influx DB
+
+            await writeTemperatureData(tempData, measurementPointId, sensorId)
+    
             res.status(200).json({ errorMap: { ...req.errorMap } });
             return;
         } catch (error) {

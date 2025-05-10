@@ -32,31 +32,22 @@ const Login = () => {
         finally { setIsLoading(false); }
     };
 
-    // useEffect(() => {
-    //     const getUserById = async (token: string, userId: string) => {
-    //         try {
-    //             console.log(`Token: ${token} + userId: ${userId}`);
-    //             // TODO - get user by ID => use JWT token from local storage
-    //             // const user: User = await useUser().
-    //         } catch (err) {
-    //             console.error("getUserById - error: ", err);
-    //         }
-
-    //     }
-
-    //     const token = localStorage.getItem("JWTtoken");
-    //     const userId = localStorage.getItem("userId");
-    //     if ((typeof token === "string" && token.length > 2) && (typeof userId === "string" && userId.length > 2)) {
-    //         getUserById(token, userId);
-    //     }
-    // }, []);
-
     return (
         <div className="d-flex justify-content-center align-items-center vh-100 bg-light flex-column">
 
             <Card style={{ width: "500px" }}>
-                <Card.Header className="text-center mb-4">
+                <Card.Header className="d-flex flex-row justify-content-between align-items-center mb-4 p-4">
                     <h2>Sign In</h2>
+                    {/* Company Logo at the top */}
+                    <img
+                        src="./smart-terrarium-logo.png" // Place your logo file in 'public/logo.png' or update the path as needed
+                        alt="Company Logo"
+                        style={{
+                            width: "120px",
+                            borderRadius: "12px",
+                            boxShadow: "0 2px 12px rgba(0,0,0,0.08)"
+                        }}
+                    />
                 </Card.Header>
                 <Card.Body>
                     <Form onSubmit={handleSubmit} >
@@ -116,7 +107,6 @@ const Login = () => {
 
                 </Card.Body>
             </Card>
-
         </div>
     );
 };

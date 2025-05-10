@@ -21,6 +21,9 @@ export const useLoggedUserContext = () => {
     return context;
 };
 
+const JWT_TOKEN_STORAGE_KEY = "JWTtoken";
+const USER_ID_STORAGE_KEY = "userId";
+
 // Create a UserProvider component to wrap your app with
 export const UserProvider: FC<{ children: ReactNode }> = ({ children }) => {
     const [userData, setUserData] = useState<User | null>(null);
@@ -29,8 +32,9 @@ export const UserProvider: FC<{ children: ReactNode }> = ({ children }) => {
         try {
             const result = await userRequests.authorize(credentials);
             console.log("loginUser - result: ", result);
-            if ("token" in result && typeof result.token === "string" && result.token.length > 5) {
-                localStorage.setItem("JWTtoken", result.token);
+            if ("token" in result && typeof result.token === "string" && result.token) {
+                localStorage.setItem(JWT_TOKEN_STORAGE_KEY, result.token);
+                localStorage.setItem(USER_ID_STORAGE_KEY, result._id);
             }
             if ("_id" in result) {
                 setUserData(result);
@@ -43,15 +47,34 @@ export const UserProvider: FC<{ children: ReactNode }> = ({ children }) => {
         }
     }
 
-    const logoutUser = () => {
-        console.log("logoutUser");
+    const logoutUser = () => {      
         setUserData(null);
-        localStorage.removeItem("JWTtoken");
+        localStorage.removeItem(JWT_TOKEN_STORAGE_KEY);
+        localStorage.removeItem(USER_ID_STORAGE_KEY);
     }
 
     useEffect(() => {
+        const fetchUserData = async (userId: string) => {
+            try {
+                const userData = await userRequests.getUser(userId);
+                setUserData(userData);
+            }
+            catch (err) {
+                console.error("fetchUserData - error: ", err);
+                // redirect("/login")
+            }
+        }
+
         console.log(`user changed to: `, userData);
-        if (!userData) { redirect("/login") }
+        if (userData) { return; }
+
+        const token = localStorage.getItem("JWTtoken");
+        const userId = localStorage.getItem("userId");
+        if (token && userId) {
+            fetchUserData(userId);
+            return;
+        }
+        redirect("/login")
 
     }, [userData]);
 

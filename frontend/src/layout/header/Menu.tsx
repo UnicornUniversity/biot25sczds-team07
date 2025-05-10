@@ -1,35 +1,22 @@
-import { useEffect, useState } from 'react';
+import { memo, useState } from 'react';
 import { Navbar, Nav, Button, ButtonGroup, DropdownButton, Dropdown } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 
 
-import organisationRequests, { Organisation } from '../../../API/requests/organisationRequests'
-import CreateProjectModal from './modals/CreateProjectModal';
-import { useMainContext } from '../../customHooks/useMainContext';
+import CreateProjectModal from './modals/CreateOrganisation';
+import { useOrganisationContext } from '../../customHooks/useOrganisationsContext';
 import { useLoggedUserContext } from '../../customHooks/useLoggedUserContext';
 
 const Menu = () => {
 
     const navigate = useNavigate();
-    const { userData } = useLoggedUserContext();
-    const { selectedOrganisation, setSelectedOrganisation } = useMainContext();
+    const { userData, logoutUser } = useLoggedUserContext();
+    const {
+        organisations,
+        selectedOrganisation, selectOrganisation,
+    } = useOrganisationContext();
 
-    const [isLoading, setIsLoading] = useState(false);
-    const [organisations, setOrganisations] = useState<Organisation[]>([]);
     const [modalVersion, setModalVersion] = useState<'create-organisation' | string>('');
-
-    useEffect(() => {
-        const fetchOrganisations = async () => {
-            try {
-                setIsLoading(true);
-                const response = await organisationRequests.listOrganisation({ pageInfo: { pageIndex: 0, pageSize: 40 }, order: "asc" });
-                setOrganisations(Array.isArray(response.organisations) ? response.organisations : [])
-            } catch (err) {
-                console.error("fetchOrganisations - error: ", err);
-            } finally { setIsLoading(false); }
-        }
-        fetchOrganisations();
-    }, []);
 
     return (
         <>
@@ -38,17 +25,29 @@ const Menu = () => {
             )}
 
             <Navbar bg="dark" variant="dark" expand="lg" fixed="top" className='px-5'>
+                <Navbar.Brand href="#" className='d-flex flex-row align-items-center'>
+                    <img
+                        src="./smart-terrarium-logo.png"
+                        width={50}
+                        height={50}
+                        className="d-inline-block align-top me-2"
+                        alt="Smart Terrarium logo"
+                    />
+
+                    Smart Terrarium
+                </Navbar.Brand>
                 <DropdownButton
                     as={ButtonGroup}
                     variant={'primary'}
                     title={selectedOrganisation?.name ?? "Create Organisation..."}
                     onSelect={(selectedKey) => {
                         if (!selectedKey) { return; }
-                        if (selectedKey === "create") { setModalVersion('create-organisation') }
-                        else {
-                            setSelectedOrganisation(organisations?.find((org) => org._id === selectedKey) ?? null);
-                            navigate('/');
+                        if (selectedKey === "create") {
+                            setModalVersion('create-organisation');
+                            return;
                         }
+                        selectOrganisation(organisations?.find((org) => org._id === selectedKey) ?? null);
+                        navigate('/');
                     }}
                 >
                     {organisations?.map((organisation) => (
@@ -77,7 +76,11 @@ const Menu = () => {
                         </span>
                     </Button>
                     <div className='ms-4'>
-                        <Button variant="danger" className="text-light" onClick={() => alert("LOGGIN OUT")}>
+                        <Button
+                            variant="danger"
+                            className="text-light"
+                            onClick={logoutUser}
+                        >
                             <i className="bi bi-box-arrow-right fs-4"></i>
                         </Button>
                     </div>
@@ -87,4 +90,4 @@ const Menu = () => {
     );
 };
 
-export default Menu;
+export default memo(Menu);
