@@ -24,7 +24,7 @@ const MeasurementPointAddModal = (props: Props) => {
     const [isLoading, setIsLoading] = useState(false);
     const [alerts, setAlerts] = useState<string[]>([]);
 
-    // const [validated, setValidated] = useState(false);
+    const [validated, setValidated] = useState(false);
     const [newMeasurementPoint, setNewMeasurementPoint] = useState<AddMeasurementPointDtoIn>({
         organisationId: selectedOrganisationId,
         name: "",
@@ -32,13 +32,13 @@ const MeasurementPointAddModal = (props: Props) => {
     });
 
     const addMeasurementPointHandler = async () => {
+        setValidated(true);
+        if (!newMeasurementPoint.name || newMeasurementPoint.name.length < 3) {
+            // setAlerts(["Measurement point name must be at least 3 characters long."]);
+            return;
+        }
+        setIsLoading(true);
         try {
-            setIsLoading(true);
-            if (!newMeasurementPoint.name || newMeasurementPoint.name.length < 3) {
-                setAlerts(["Measurement point name must be at least 3 characters long."]);
-                return;
-            }
-
             const result = await measurementPointsRequests.addMeasurementPoint(newMeasurementPoint);
             if (result._id) {
                 acknowladgeAddedMeasurementPoint(result);
@@ -71,15 +71,17 @@ const MeasurementPointAddModal = (props: Props) => {
                     <Form.Control
                         type="text"
                         placeholder="Enter name"
-                        isInvalid
+                        isInvalid={validated && newMeasurementPoint.name.length < 3}
                         minLength={3}
                         maxLength={50}
                         onChange={(e) => setNewMeasurementPoint({ ...newMeasurementPoint, name: e.target.value ?? "" })}
                     />
+                    <Form.Control.Feedback type="invalid">Name must be longer than 2 characters.</Form.Control.Feedback>
                 </Form.Group>
                 <Form.Group className="mb-3" controlId="description">
                     <Form.Label>Description</Form.Label>
                     <Form.Control
+                        as="textarea"
                         type="text"
                         placeholder="Enter description (optional)"
                         maxLength={500}

@@ -59,9 +59,9 @@ export const OrganisationsContextProvider: React.FC<{ children: ReactNode }> = (
         setSelectedOrganisation(organisation);
         if (organisation) {
             localStorage.setItem(SELECTED_ORGANISATION_KEY, organisation._id);
-        } else {
-            localStorage.removeItem(SELECTED_ORGANISATION_KEY);
+            return;
         }
+        localStorage.removeItem(SELECTED_ORGANISATION_KEY);
     }
 
 

@@ -51,7 +51,7 @@ const MeasurementPointUpdateModal = (props: Props) => {
         <DefaultModal
             title="Update Measurement Point"
             show={modalVersion === "update-measurement-point"}
-            size="lg"
+            // size="lg"
             submitText="Update"
             submitButtonColor="warning"
             onSubmit={updateMeasurementPointHandler}
@@ -73,6 +73,7 @@ const MeasurementPointUpdateModal = (props: Props) => {
                 <Form.Group className="mb-3" controlId="description">
                     <Form.Label>Description</Form.Label>
                     <Form.Control
+                        as="textarea"
                         type="text"
                         value={updatedMeasurementPoint.description}
                         placeholder="Enter description (optional)"

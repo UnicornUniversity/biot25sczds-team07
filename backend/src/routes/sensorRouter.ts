@@ -98,6 +98,12 @@ sensorRouter.post(
                 return;
             }
 
+            if (sensorToAdd.config.sendInterval < sensorToAdd.config.measureInterval) {
+                req.errorMap["404"] = "Send interval must be greater than or equal to measure interval.";
+                res.status(404).json({ errorMap: req.errorMap });
+                return;
+            }
+
             const created = dayjs().unix();
             measurementPoint.sensors.push({
                 ...sensorToAdd,
@@ -182,11 +188,18 @@ sensorRouter.post(
                 return;
             }
 
+        
             const newSensors = [...measurementPoint.sensors];
             const updatedSensor = newSensors[sensorIndex];
             if (name) { updatedSensor.name = name }
             if (quantity) { updatedSensor.quantity = quantity; }
             if (config) {
+                if (config.sendInterval < config.measureInterval) {
+                    req.errorMap["404"] = "Send interval must be greater than or equal to measure interval.";
+                    res.status(404).json({ errorMap: req.errorMap });
+                    return;
+                }
+    
                 updatedSensor.config = {
                     ...config,
                     created: dayjs().unix()

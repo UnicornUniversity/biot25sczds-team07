@@ -19,7 +19,7 @@ const sensorConfigSchema: JSONSchemaType<SensorConfigurationDTO> = {
         measureInterval: {
             type: 'number',
             nullable: false,
-            minimum: 60,
+            minimum: 1,
             maximum: 86_400, // a day in seconds
             errorMessage: {
                 type: `${VALIDATION_ERRORS.TYPE} Number`,

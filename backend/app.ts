@@ -17,7 +17,7 @@ const app = express();
 const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:3000',
-    'smart-terrarium.azurewebsites.net'
+    'https://smart-terrarium.azurewebsites.net'
 ];
 
 // Enable CORS for requests from http://localhost:5173

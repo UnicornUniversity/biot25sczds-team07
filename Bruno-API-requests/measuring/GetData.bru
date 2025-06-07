@@ -1,0 +1,20 @@
+meta {
+  name: GetData
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{hostname}}/measuring/getData
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "fromEpoch":1749114087 ,
+    "toEpoch": 1749200487,
+    "measurementPointId": "680501e80f48c38d51d4ce92",
+    "sensorId": "681cf9cc3c79b6d31bff1e9b"
+  }
+}

@@ -22,11 +22,13 @@ const CreateOrganisation = (props: Props) => {
         name: "",
         description: "",
     });
+    const [validated, setValidated] = useState(false);
 
     const handleSubmitNewOrganisation = async () => {
+        setValidated(true);
         if (!newOrganisation.name || newOrganisation.name.length < 3) {
-            console.error("handleSubmitNewProject - newOrganisation is null: ", newOrganisation);
-            setAlerts([...alerts, "Organisation name must be longer than 3 characters"]);
+            // console.error("handleSubmitNewProject - newOrganisation is null: ", newOrganisation);
+            // setAlerts([...alerts, "Organisation name must be longer than 3 characters"]);
             return;
         }
         try {
@@ -64,11 +66,13 @@ const CreateOrganisation = (props: Props) => {
                         <Form.Control
                             type="text"
                             placeholder="Name..."
+                            isInvalid={validated && newOrganisation.name.length < 3}
                             minLength={3}
                             maxLength={60}
                             value={newOrganisation.name}
                             onChange={(e) => setNewOrganisation({ ...newOrganisation, name: e.target.value })}
                         />
+                        <Form.Control.Feedback type="invalid">Name must be longer than 2 characters.</Form.Control.Feedback>
                     </Col>
                 </Form.Group>
 

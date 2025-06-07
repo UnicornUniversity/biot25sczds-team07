@@ -5,3 +5,10 @@ export interface TemperatureData {
     temperature: number,
     state: SensorState
 }
+
+
+export interface SensorDataInfluxOutput {
+    sensorId: string,
+    sensorData: TemperatureData[];
+    averageTemperature: number | null;
+}

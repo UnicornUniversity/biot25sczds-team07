@@ -17,23 +17,15 @@ const SensorItem = (props: Props) => {
 
     return (
         <Row className="p-2 rounded-2 border border-1">
-            <Col sm={4} lg={2} className="">
-                <h5 className="p-0 m-0">
-                    <Badge
-                        bg={sensor.quantity === "temperature" ? "danger" : "warning"}
-                        className="text-uppercase me-3">
-                        <i className={`bi bi-${sensor.quantity === "temperature" ? "thermometer" : "arrows-move"}`} />
-                        {sensor.quantity}
-                    </Badge>
-                </h5>
+            <Col sm={4} lg={3} className="d-flex align-items-center">
+                <Badge
+                    bg={sensor.quantity === "temperature" ? "danger" : "warning"}
+                    className="text-uppercase me-3">
+                    <i className={`bi bi-${sensor.quantity === "temperature" ? "thermometer" : "arrows-move"}`} />
+                    {sensor.quantity}
+                </Badge>
+                <b> {sensor.name}</b>
             </Col>
-
-            <Col sm={8} lg={4} className="d-flex flex-row  align-items-center">
-                <span>
-                    <b> {sensor.name}</b>
-                </span>
-            </Col>
-
             <Col lg={4} className="d-flex flex-row gap-3 justify-content-end align-items-center">
                 <div>
                     <Tooltip
@@ -66,7 +58,7 @@ const SensorItem = (props: Props) => {
                 </div>
             </Col>
 
-            <Col lg={2} className="d-flex gap-3 flex-row justify-content-end align-items-center">
+            <Col lg={5} className="d-flex gap-3 flex-row justify-content-end align-items-center">
                 <Button
                     variant="warning"
                     onClick={() => {

@@ -24,10 +24,12 @@ const DefaultModal = (props: Props) => {
     return (
         <Modal show={show} onHide={onHide} size={size}>
             <Modal.Header closeButton>
-                <Modal.Title>{title}</Modal.Title>
+                <Modal.Title>
+                    <h2>{title}</h2>
+                </Modal.Title>
             </Modal.Header>
             <Modal.Body>{children}</Modal.Body>
-            <Modal.Footer>
+            <Modal.Footer className="d-flex justify-content-between">
                 <Button variant="secondary" onClick={onHide}>
                     Close
                 </Button>

@@ -1,7 +1,7 @@
 import apiClient from "../axiosInstance"
 
 
-const URL_PREFIX = "/data"
+const URL_PREFIX = "/measuring"
 
 export enum SensorState {
     IDLE = 1,
@@ -14,15 +14,20 @@ export interface TemperatureData {
     state: SensorState
 }
 
-
-export interface RetrieveDataDtoIn {
-    measurementPointId: string,
-    startTime: number,
-    endTime: number,
+export interface SensorDataInfluxOutput {
+    sensorId: string,
+    sensorData: TemperatureData[];
+    averageTemperature: number | null;
 }
-const retrieveData = async (data: RetrieveDataDtoIn) => {
-    const response = await apiClient.get(`${URL_PREFIX}/get?measurementPointId=${data.measurementPointId}&from=${data.startTime}&to=${data.endTime}`);
-    return response.data as TemperatureData[];
+export interface RetrieveDataDtoIn {
+    fromEpoch: number,
+    toEpoch: number,
+    measurementPointId: string,
+    sensorId?: string,
+}
+const retrieveData = async (dtoIn: RetrieveDataDtoIn) => {
+    const response = await apiClient.post(`${URL_PREFIX}/getData`, dtoIn);
+    return response.data.measuredData as SensorDataInfluxOutput[];
 };
 
 const dataRequests = {

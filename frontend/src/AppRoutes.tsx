@@ -11,6 +11,7 @@ import NotFoundPage from '../pages/NotFoundPage';
 import Dashboard from './views/dashboard-view/Dashboard';
 import UserProfile from './views/users-view/User';
 import { useLoggedUserContext } from './customHooks/useLoggedUserContext';
+import Charts from './views/charts-view/Charts';
 
 
 // Separate the route logic into its own component
@@ -19,18 +20,21 @@ const AppRoutes = React.memo(() => {
 
     return (
         <Routes>
-            {userData ? (
-                <Route path="/" element={<Layout />}>
-                    <Route index element={<Dashboard />} />
-                    <Route path="/user/:userId" element={<UserProfile />} />
-                    <Route path="/register" element={<Register />} />
-                </Route>
-            ) : (
-                <>
-                    <Route index element={<Login />} />
-                    <Route path="/register" element={<Register />} />
-                </>
-            )}
+            {userData
+                ? (
+                    <Route path="/" element={<Layout />}>
+                        <Route index element={<Dashboard />} />
+                        <Route path="/user/:userId" element={<UserProfile />} />
+                        <Route path="/charts" element={<Charts />} />
+                        <Route path="/register" element={<Register />} />
+                    </Route>
+                )
+                : (
+                    <>
+                        <Route index element={<Login />} />
+                        <Route path="/register" element={<Register />} />
+                    </>
+                )}
             <Route path="*" element={<NotFoundPage />} />
         </Routes>
     );

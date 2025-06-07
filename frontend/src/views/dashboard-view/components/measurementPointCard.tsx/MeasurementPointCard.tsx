@@ -1,5 +1,5 @@
-import { memo, useCallback, useState } from "react";
-import { Button, Col, Row } from "react-bootstrap";
+import { memo, useCallback, useEffect, useState } from "react";
+import { Alert, Button, Col, Row } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
 import { MeasurementPoint, Sensor } from "../../../../../API/requests/measurementPointsRequests";
@@ -8,9 +8,10 @@ import { DashboardModalVersion } from "../../Dashboard";
 import SensorItem from "./SensorItem";
 import TemperatureChart from "../../../../components/charts/TemperatureChart";
 
-import SensorAddModal from "./modals/SensorAddModal";
-import SensorUpdateModal from "./modals/SensorUpdateModal";
+import SensorAddUpdateModal from "./modals/SensorAddUpdateModal";
 import SensorDeleteModal from "./modals/SensorDeleteModal";
+import dataRequests, { SensorDataInfluxOutput } from "../../../../../API/requests/dataRequests";
+import dayjs from "dayjs";
 
 
 export type MeasurementPointCardModalVersion = 'add-sensor' | 'update-sensor' | 'delete-sensor' | '';
@@ -27,14 +28,13 @@ const MeasurementPointCard = (props: Props) => {
     } = props;
 
     const navigate = useNavigate();
-
-    // const [isLoading, setIsLoading] = useState(false);[]
-    // const [alerts, setAlerts] = useState<string[]>([]);
     const [localModalVersion, setLocalModalVersion] = useState<MeasurementPointCardModalVersion>('');
-
+    const [isLoading, setIsLoading] = useState(false);
 
     const [sensors, setSensors] = useState<Sensor[]>(measurementPoint.sensors || []);
+    const [sensorsData, setSensorsData] = useState<SensorDataInfluxOutput[]>([]);
     const [selectedSensor, setSelectedSensor] = useState<Sensor | null>(null);
+
 
     const acknowladgeNewSensors = useCallback((sensors: Sensor[]) => {
         setSensors(sensors);
@@ -46,23 +46,40 @@ const MeasurementPointCard = (props: Props) => {
         setSelectedSensor(null);
     }, [sensors]);
 
+    useEffect(() => {
+        const fetchLastDayData = async (mpId: string) => {
+            setIsLoading(true);
+            try {
+
+                const result = await dataRequests.retrieveData({
+                    fromEpoch: dayjs().subtract(1, 'day').unix(),
+                    toEpoch: dayjs().unix(),
+                    measurementPointId: mpId,
+                })
+                setSensorsData(result);
+            } catch (error) {
+                console.error("Error fetching last day data:", error);
+            }
+            finally { setIsLoading(false); }
+        }
+
+        if (!measurementPoint._id) {
+            console.warn("Measurement Point does not have an ID, skipping data fetch.");
+            return;
+        }
+        fetchLastDayData(measurementPoint._id)
+    }, [measurementPoint])
+
+
     return (
         <>
-            {localModalVersion === 'add-sensor' && (
-                <SensorAddModal
+            {(localModalVersion === 'add-sensor' || localModalVersion === "update-sensor") && (
+                <SensorAddUpdateModal
                     modalVersion={localModalVersion}
                     setModalVersion={setLocalModalVersion}
                     mpId={measurementPoint._id}
                     acknowladgeNewSensors={acknowladgeNewSensors}
-                />
-            )}
-            {(localModalVersion === 'update-sensor' && selectedSensor) && (
-                <SensorUpdateModal
-                    modalVersion={localModalVersion}
-                    setModalVersion={setLocalModalVersion}
-                    mpId={measurementPoint._id}
-                    sensor={selectedSensor}
-                    acknowladgeNewSensors={acknowladgeNewSensors}
+                    sensor={selectedSensor ?? undefined}
                 />
             )}
             {(localModalVersion === 'delete-sensor' && selectedSensor) && (
@@ -114,15 +131,36 @@ const MeasurementPointCard = (props: Props) => {
                             </p>
                             <Button
                                 variant="primary"
-                                onClick={() => navigate(`/data?mpId=${measurementPoint._id}`)}
+                                onClick={() => navigate(`/charts?measurementPointId=${measurementPoint._id}`)}
 
                             >
                                 <i className="bi bi-graph-up-arrow me-2" />
                                 View Data
                             </Button>
                         </div>
-
-                        <TemperatureChart data={[]} />
+                        {sensors.map((sensor) => {
+                            const sensorData = sensorsData.find(data => data.sensorId === sensor.sensorId);
+                            if (!sensorData || sensorData.sensorData.length < 1) {
+                                return (
+                                    <>
+                                        <p className="text-info">
+                                            <strong className="">Sensor {sensor.name}</strong>
+                                        </p>
+                                        <Alert variant="warning" className="mb-3">
+                                            <span key={sensor.sensorId}>No data available for sensor (measured quantity: {sensor.quantity}) in the last 24h.</span>
+                                        </Alert>
+                                    </>
+                                );
+                            }
+                            return (
+                                <>
+                                    <p className="text-info">
+                                        <strong className="">Sensor {sensor.name}</strong>
+                                    </p>
+                                    <TemperatureChart key={sensor.sensorId} data={sensorData} />
+                                </>
+                            );
+                        })}
                     </div>
                     <div>
                         <div className="d-flex mb-2 flex-row justify-content-between align-items-center">
@@ -139,6 +177,7 @@ const MeasurementPointCard = (props: Props) => {
                         <div className="d-flex flex-column gap-2">
                             {sensors.map((sensor) => (
                                 <SensorItem
+                                    key={sensor.sensorId}
                                     sensor={sensor}
                                     setModalVersion={setLocalModalVersion}
                                     setEditedSensor={setSelectedSensor}
