@@ -25,7 +25,7 @@ const Menu = () => {
             )}
 
             <Navbar bg="dark" variant="dark" expand="lg" fixed="top" className='px-5'>
-                <Navbar.Brand href="#" className='d-flex flex-row align-items-center'>
+                <Navbar.Brand href="https://smart-terrarium.azurewebsites.net/" className='d-flex flex-row align-items-center'>
                     <img
                         src="./smart-terrarium-logo.png"
                         width={50}

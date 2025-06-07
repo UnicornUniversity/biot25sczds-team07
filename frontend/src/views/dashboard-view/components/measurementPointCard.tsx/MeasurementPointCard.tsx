@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useState } from "react";
-import { Alert, Button, Col, Row } from "react-bootstrap";
+import { Alert, Button, Col, Container, Row, Spinner } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
 import { MeasurementPoint, Sensor } from "../../../../../API/requests/measurementPointsRequests";
@@ -29,7 +29,7 @@ const MeasurementPointCard = (props: Props) => {
 
     const navigate = useNavigate();
     const [localModalVersion, setLocalModalVersion] = useState<MeasurementPointCardModalVersion>('');
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     const [sensors, setSensors] = useState<Sensor[]>(measurementPoint.sensors || []);
     const [sensorsData, setSensorsData] = useState<SensorDataInfluxOutput[]>([]);
@@ -92,101 +92,105 @@ const MeasurementPointCard = (props: Props) => {
                 />
             )}
 
-            <Row className="shadow border border-3 border-secondary  rounded-3 mb-3 p-3">
-                <Col sm={10}>
-                    <h4 className="text-primary">{measurementPoint.name}</h4>
-                    <p className="text-muted">MeasurementPoint ID: {measurementPoint._id}</p>
-                    <p>{measurementPoint.description}</p>
-                </Col>
-                <Col sm={2} className="d-flex flex-row justify-content-end gap-2 align-items-start">
-                    <Button
-                        variant="warning"
-                        onClick={() => {
-                            setModalVersion('update-measurement-point');
-                            setEditedMeasurementPoint(measurementPoint);
-                        }}
-                    >
-                        <i className="bi bi-pencil-fill" />
-                        <span className="ms-1">Edit</span>
-                    </Button>
-                    <Button
-                        variant="danger"
-                        onClick={() => {
-                            setModalVersion('delete-measurement-point');
-                            setEditedMeasurementPoint(measurementPoint);
-                        }}
-                    >
-                        <i className="bi bi-trash" />
-                        <span className="ms-1">Delete</span>
-                    </Button>
-                </Col>
+            <Container className="shadow border border-3 border-secondary  rounded-3 mb-3 p-3">
+                <Row>
+                    <Col sm={10}>
+                        <h4 className="text-primary">{measurementPoint.name}</h4>
+                        <p className="text-muted">MeasurementPoint ID: {measurementPoint._id}</p>
+                        <p>{measurementPoint.description}</p>
+                    </Col>
+                    <Col sm={2} className="d-flex flex-row justify-content-end gap-2 align-items-start">
+                        <Button
+                            variant="warning"
+                            onClick={() => {
+                                setModalVersion('update-measurement-point');
+                                setEditedMeasurementPoint(measurementPoint);
+                            }}
+                        >
+                            <i className="bi bi-pencil-fill" />
+                            <span className="ms-1">Edit</span>
+                        </Button>
+                        <Button
+                            variant="danger"
+                            onClick={() => {
+                                setModalVersion('delete-measurement-point');
+                                setEditedMeasurementPoint(measurementPoint);
+                            }}
+                        >
+                            <i className="bi bi-trash" />
+                            <span className="ms-1">Delete</span>
+                        </Button>
+                    </Col>
+                </Row>
 
 
-                <Col sm={12} className="d-flex flex-column gap-4">
+                <div className="d-flex flex-column gap-4">
                     <hr className="mb-0" />
-                    <div>
-                        <div className="d-flex justify-content-between">
-                            <p>
-                                <strong>Temperature data recorded in last 24h:</strong>
-                            </p>
-                            <Button
-                                variant="primary"
-                                onClick={() => navigate(`/charts?measurementPointId=${measurementPoint._id}`)}
 
-                            >
-                                <i className="bi bi-graph-up-arrow me-2" />
-                                View Data
-                            </Button>
-                        </div>
-                        {sensors.map((sensor) => {
-                            const sensorData = sensorsData.find(data => data.sensorId === sensor.sensorId);
-                            if (!sensorData || sensorData.sensorData.length < 1) {
-                                return (
-                                    <>
-                                        <p className="text-info">
-                                            <strong className="">Sensor {sensor.name}</strong>
-                                        </p>
-                                        <Alert variant="warning" className="mb-3">
-                                            <span key={sensor.sensorId}>No data available for sensor (measured quantity: {sensor.quantity}) in the last 24h.</span>
-                                        </Alert>
-                                    </>
-                                );
-                            }
+                    <div className="d-flex justify-content-between">
+                        <p>
+                            <strong>Temperature data recorded in last 24h:</strong>
+                        </p>
+                        <Button
+                            variant="primary"
+                            onClick={() => navigate(`/charts?measurementPointId=${measurementPoint._id}`)}
+
+                        >
+                            <i className="bi bi-graph-up-arrow me-2" />
+                            View Data
+                        </Button>
+                    </div>
+                    {sensors.map((sensor) => {
+                        const sensorData = sensorsData.find(data => data.sensorId === sensor.sensorId);
+                        if (isLoading) {
+                            return (<Spinner className="ms-1" as="span" size="sm" aria-hidden="true" animation="border" role="status" />)
+                        }
+                        if (!sensorData || sensorData.sensorData.length < 1) {
                             return (
                                 <>
-                                    <p className="text-info">
+                                    <p className="text-primary">
                                         <strong className="">Sensor {sensor.name}</strong>
                                     </p>
-                                    <TemperatureChart key={sensor.sensorId} data={sensorData} />
+                                    <Alert variant="warning" className="mb-3">
+                                        <span key={sensor.sensorId}>No data available for sensor (measured quantity: {sensor.quantity}) in the last 24h.</span>
+                                    </Alert>
                                 </>
                             );
-                        })}
-                    </div>
-                    <div>
-                        <div className="d-flex mb-2 flex-row justify-content-between align-items-center">
-                            <p>   <strong className="">Measurement Point Sensors:</strong></p>
-                            <Button
-                                variant="success"
-                                onClick={() => setLocalModalVersion('add-sensor')}
-                            >
-                                <i className="bi bi-plus" />
-                                <span className="ms-1">Add Sensor</span>
-                            </Button>
-                        </div>
+                        }
+                        return (
+                            <>
+                                <p className="text-primary">
+                                    <strong className="">Sensor {sensor.name}</strong>
+                                </p>
+                                <TemperatureChart key={sensor.sensorId} data={sensorData} customDateFormat="HH:mm" />
+                            </>
+                        );
+                    })}
 
-                        <div className="d-flex flex-column gap-2">
-                            {sensors.map((sensor) => (
-                                <SensorItem
-                                    key={sensor.sensorId}
-                                    sensor={sensor}
-                                    setModalVersion={setLocalModalVersion}
-                                    setEditedSensor={setSelectedSensor}
-                                />
-                            ))}
-                        </div>
+                    <div className="d-flex mb-2 flex-row justify-content-between align-items-center">
+                        <p>   <strong className="">Measurement Point Sensors:</strong></p>
+                        <Button
+                            variant="success"
+                            onClick={() => setLocalModalVersion('add-sensor')}
+                        >
+                            <i className="bi bi-plus" />
+                            <span className="ms-1">Add Sensor</span>
+                        </Button>
                     </div>
-                </Col>
-            </Row>
+
+                    <div className="d-flex flex-column gap-2">
+                        {sensors.map((sensor) => (
+                            <SensorItem
+                                key={sensor.sensorId}
+                                sensor={sensor}
+                                setModalVersion={setLocalModalVersion}
+                                setEditedSensor={setSelectedSensor}
+                            />
+                        ))}
+                    </div>
+
+                </div>
+            </Container>
         </>
 
     );

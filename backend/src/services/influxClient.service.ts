@@ -51,51 +51,53 @@ const readTemperatureData = async (
         const fromDate = new Date(from * 1000).toISOString();
         const toDate = new Date(to * 1000).toISOString();
 
-        const sql = `
-           SELECT "sensorId", "state", "temperature", "time"
-           FROM "temperature"
-           WHERE
+        // Query 1: Get all data rows
+        const dataSql = `
+            SELECT "sensorId", "state", "temperature", "time"
+            FROM "temperature"
+            WHERE
                 time >= TIMESTAMP '${fromDate}'
                 AND time <= TIMESTAMP '${toDate}'
                 AND "measurementPointId" = '${measurementPointId}'
                 AND "sensorId" = '${sensorId}'
                 AND ("state" IS NOT NULL OR "temperature" IS NOT NULL)
-           UNION ALL
-                SELECT "sensorId", NULL AS "state", AVG("temperature") AS "temperature", NULL AS "time"
-                FROM "temperature"
-                WHERE
-                    time >= TIMESTAMP '${fromDate}'
-                    AND time <= TIMESTAMP '${toDate}'
-                    AND "measurementPointId" = '${measurementPointId}'
-                    AND "sensorId" = '${sensorId}'
-                    AND "temperature" IS NOT NULL
-            GROUP BY "sensorId"
-       `;
+            ORDER BY time ASC
+        `;
 
-        console.log("Executing Flux query: ", sql);
+        // Query 2: Get average temperature
+        const avgSql = `
+            SELECT AVG("temperature") AS "temperature"
+            FROM "temperature"
+            WHERE
+                time >= TIMESTAMP '${fromDate}'
+                AND time <= TIMESTAMP '${toDate}'
+                AND "measurementPointId" = '${measurementPointId}'
+                AND "sensorId" = '${sensorId}'
+                AND "temperature" IS NOT NULL
+        `;
 
-        const sensorData: TemperatureData[] = []
-        let averageTemperature: number | null = null
+        const sensorData: TemperatureData[] = [];
+        let averageTemperature: number | null = null;
 
-        const rows = influxClient.query(sql, db_bucket);
-        console.log("rows: ", rows);
-
-        for await (const row of rows) {
-            console.log("Rows returned from InfluxDB: ", row);
-
-            // // If the row has _time, it's a data row; otherwise, it's the average row
+        // Fetch data rows
+        for await (const row of influxClient.query(dataSql, db_bucket)) {
             if (row.temperature !== undefined && row.time && row.sensorId) {
-                console.log("pussing to data...");
                 sensorData.push({
                     temperature: Number(row.temperature),
                     state: Number(row.state),
                     timeStamp: Math.floor(new Date(row.time).getTime() / 1000),
-                })
-            } else if (row.temperature !== undefined && !row.time) {
-                averageTemperature = Number(row.temperature)
+                });
             }
         }
-        return { sensorData, sensorId, averageTemperature }
+
+        // Fetch average
+        for await (const row of influxClient.query(avgSql, db_bucket)) {
+            if (row.temperature !== undefined) {
+                averageTemperature = Number(row.temperature);
+            }
+        }
+
+        return { sensorData, sensorId, averageTemperature };
     } catch (error) {
         console.error('Error reading data from InfluxDB:', error);
         throw error;

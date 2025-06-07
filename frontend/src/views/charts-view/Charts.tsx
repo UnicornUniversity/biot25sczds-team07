@@ -1,28 +1,31 @@
 import { useEffect, useState } from 'react'
 import { useOrganisationContext } from '../../customHooks/useOrganisationsContext';
-import { useLoggedUserContext } from '../../customHooks/useLoggedUserContext';
 import { Alert, Button, Col, Container, Form, FormGroup, Row, Spinner } from 'react-bootstrap';
 import measurementPointsRequests, { MeasurementPoint } from '../../../API/requests/measurementPointsRequests';
 import dayjs from 'dayjs';
 import dataRequests, { SensorDataInfluxOutput } from '../../../API/requests/dataRequests';
 import { useSearchParams } from 'react-router-dom';
-import TemperatureChart from '../../components/charts/TemperatureChart';
+
+import SensorChart from './components/SensorChart';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
+
 
 const Charts = () => {
-    const { userData } = useLoggedUserContext();
+    // const { userData } = useLoggedUserContext();
     const [searchParams] = useSearchParams();
     const measurementPointIdFromQuery = searchParams.get("measurementPointId");
+    console.log("Measurement Point ID from query:", measurementPointIdFromQuery);
 
     const { selectedOrganisation } = useOrganisationContext();
-
-    const [alerts, setAlerts] = useState<{ type: string, message: string }[]>([]);
-    const [isLoading, setIsLoading] = useState({ measurementPoints: false, data: false });
+    const [isLoading, setIsLoading] = useState({ measurementPoints: false, data: !!measurementPointIdFromQuery });
 
     const [orgMeasurementPoints, setOrgMeasurementPoints] = useState<MeasurementPoint[]>([]);
     const [selectedMpId, setSelectedMpId] = useState(measurementPointIdFromQuery ?? "");
 
     const [fromDayjs, setFromDayjs] = useState<dayjs.Dayjs>(dayjs().subtract(1, 'day'));
     const [toDayjs, setToDayjs] = useState<dayjs.Dayjs>(dayjs());
+    const [datePickerOpen, setDatePickerOpen] = useState<0 | 1 | 2>(0);
 
     const [measurementData, setMeasurementData] = useState<SensorDataInfluxOutput[]>([]); // Replace 'any' with the actual type of your measurement data
 
@@ -60,15 +63,19 @@ const Charts = () => {
 
     useEffect(() => {
         const fetchMeasurementPoints = async (organisationId: string) => {
-            setIsLoading({ measurementPoints: true, data: false });
+            setIsLoading({ ...isLoading, measurementPoints: true, });
             try {
                 const result = await measurementPointsRequests.listMeasurementPoints({ organisationId });
                 setOrgMeasurementPoints(result.measurementPoints);
+
+                if (measurementPointIdFromQuery && result.measurementPoints.some(mp => mp._id === measurementPointIdFromQuery)) {
+                    setSelectedMpId(measurementPointIdFromQuery);
+                }
             } catch (error) {
                 console.error("Error fetching measurement points:", error);
             }
             finally {
-                setIsLoading({ measurementPoints: false, data: false });
+                setIsLoading({ ...isLoading, measurementPoints: false, });
             }
         }
 
@@ -77,7 +84,7 @@ const Charts = () => {
             return;
         }
         fetchMeasurementPoints(selectedOrganisation._id);
-    }, [selectedOrganisation])
+    }, [selectedOrganisation, measurementPointIdFromQuery])
 
     useEffect(() => {
         if (!selectedMpId || !selectedOrganisation) {
@@ -92,7 +99,7 @@ const Charts = () => {
 
     return (
         <Container className='mt-4'>
-            <h1>Meaured Data</h1>
+            <h1>Measured Data</h1>
 
             <Row className='fw-bold border border-2 mb-3 p-3 rounded'>
                 <Col md={3}>
@@ -120,17 +127,117 @@ const Charts = () => {
                         </Form.Select>
                     </FormGroup>
                 </Col>
-                <Col md={9}>
+                <Col md={9} className='d-flex flex-column justify-content-end '>
                     {!selectedOrganisation && (
                         <Alert variant='info'>
                             Please select an organisation to view the charts.
                         </Alert>
                     )}
+                    {(selectedOrganisation && !selectedMpId) && (
+                        <Alert variant='info'>
+                            Please select an Measurement Point to view the charts.
+                        </Alert>
+                    )}
                 </Col>
 
-                <Col sm={6}>
-                    <Form.Label htmlFor='dateRange'>Interval of Displayed Data</Form.Label>
+                <Col sm={6} className='d-flex flex-row justify-content-between gap-2 '>
+                    <div className='d-flex flex-row gap-2'>
+                        <div className='d-flex flex-column' style={{ position: "relative" }}>
+                            <Form.Label htmlFor='dateFrom'>From Date:</Form.Label>
+                            <Button color="primary" onClick={() => setDatePickerOpen(1)} >
+                                <i className="bi bi-calendar-fill me-2" />
+                                {fromDayjs.format("DD.MM.YYYY")}
+                            </Button>
+                            {datePickerOpen === 1 && (
+                                <>
+                                    <div
+                                        style={{
+                                            position: "fixed",
+                                            top: 0,
+                                            left: 0,
+                                            width: "100vw",
+                                            height: "100vh",
+                                            zIndex: 999,
+                                            background: "transparent",
+                                        }}
+                                        onClick={() => setDatePickerOpen(0)}
+                                    />
+                                    <div style={{
+                                        position: "absolute",
+                                        zIndex: 1000,
+                                        top: "100%",
+                                        left: 0,
+                                        background: "#fff",
+                                        boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                                        borderRadius: "8px"
+                                    }}>
+                                        <DatePicker
+                                            selected={fromDayjs.toDate()}
+                                            maxDate={toDayjs.subtract(1, "day").toDate()}
+                                            onSelect={(date) => {
+                                                if (!date) return;
+                                                setFromDayjs(dayjs(date));
+                                                setDatePickerOpen(0);
+                                            }}
+                                            inline
+                                        />
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                        <div className='d-flex flex-column' style={{ position: "relative" }}>
+                            <Form.Label htmlFor='dateTo'>To Date:</Form.Label>
+                            <Button color="primary" onClick={() => setDatePickerOpen(2)}                        >
+                                <i className="bi bi-calendar-fill me-2" />
+                                {toDayjs.format("DD.MM.YYYY")}
+                            </Button>
+                            {datePickerOpen === 2 && (
+                                <>
+                                    <div
+                                        style={{
+                                            position: "fixed",
+                                            top: 0,
+                                            left: 0,
+                                            width: "100vw",
+                                            height: "100vh",
+                                            zIndex: 999,
+                                            background: "transparent",
+                                        }}
+                                        onClick={() => setDatePickerOpen(0)}
+                                    />
+                                    <div style={{
+                                        position: "absolute",
+                                        zIndex: 1000,
+                                        top: "100%",
+                                        left: 0,
+                                        background: "#fff",
+                                        boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                                        borderRadius: "8px"
+                                    }}>
+                                        <DatePicker
+                                            selected={toDayjs.toDate()}
+                                            minDate={fromDayjs.add(1, "day").toDate()}
+                                            onSelect={(date) => {
+                                                if (!date) return;
+                                                setToDayjs(dayjs(date));
+                                                setDatePickerOpen(0);
+                                            }}
+                                            inline
+                                        />
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
 
+                    <Button
+                        className=' align-self-end'
+                        color="primary"
+                        onClick={() => fetchData()}
+                    >
+                        <i className="bi bi-bar-chart-fill me-2" />
+                        View Data
+                    </Button>
                 </Col>
                 <Col sm={6}>
                     <Form.Label>Quick Interval Select</Form.Label>
@@ -168,8 +275,8 @@ const Charts = () => {
 
             <Row className='mb-4'>
                 <Col>
-                    {isLoading.data && (<Spinner animation='border' variant='primary' className='mx-auto' />)}
-                    {selectedMpId && !isLoading.data && measurementData.length < 1 && (
+                    {isLoading.data && (<Spinner className="ms-1" as="span" size="sm" aria-hidden="true" animation="border" role="status" />)}
+                    {selectedMpId && orgMeasurementPoints.length > 0 && !isLoading.data && measurementData.length < 1 && (
                         <Alert variant='info' className='mx-auto'>
                             No data available for the selected measurement point in the specified time range.
                         </Alert>
@@ -185,35 +292,14 @@ const Charts = () => {
                             console.warn(`Sensor with ID ${sensorData.sensorId} not found in measurement point ${selectedMpId}`);
                             return null;
                         }
-                        if (!sensorData || sensorData.sensorData.length < 1) {
-                            return (
-                                <div className='border border-1 p-3 rounded'>
-                                    <p className="text-info">
-                                        <strong className="">Sensor {sensor.name}</strong>
-                                    </p>
-                                    <Alert variant="warning" className="mb-3">
-                                        <span key={sensor.sensorId}>No data available for sensor (measured quantity: {sensor.quantity}) in the last 24h.</span>
-                                    </Alert>
-                                </div>
-                            );
-                        }
                         return (
-                            <div className='border border-1 p-3 rounded my-2' key={sensorData.sensorId}>
-                                <Button
-                                    className='mb-2 me-auto'
-                                    style={{ alignSelf: "flex-start" }}
-                                    variant='primary'
-                                    onClick={() => console.log("implemented export functionality")}
-                                >
-                                    Expor Data
-                                </Button>
-
-                                <p className="text-info">
-                                    <strong className="">Sensor {sensor.name}</strong>
-                                </p>
-                                <TemperatureChart showStats key={sensor.sensorId} data={sensorData} />
-                            </div>
-                        );
+                            <SensorChart
+                                key={sensorData.sensorId}
+                                fromDayJs={fromDayjs}
+                                toDayJs={toDayjs}
+                                sensor={sensor} sensorData={sensorData}
+                            />
+                        )
                     })}
                 </Col>
             </Row>

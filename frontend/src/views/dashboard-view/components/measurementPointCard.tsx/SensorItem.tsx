@@ -16,8 +16,8 @@ const SensorItem = (props: Props) => {
     } = props;
 
     return (
-        <Row className="p-2 rounded-2 border border-1">
-            <Col sm={4} lg={3} className="d-flex align-items-center">
+        <Row className="p-2 rounded-2 border border-1 gap-2 gap-md-0">
+            <Col sm={12} md={4} lg={4} className="d-flex flex-column flex-lg-row justify-content-center justify-content-lg-start align-items-center">
                 <Badge
                     bg={sensor.quantity === "temperature" ? "danger" : "warning"}
                     className="text-uppercase me-3">
@@ -26,8 +26,8 @@ const SensorItem = (props: Props) => {
                 </Badge>
                 <b> {sensor.name}</b>
             </Col>
-            <Col lg={4} className="d-flex flex-row gap-3 justify-content-end align-items-center">
-                <div>
+            <Col sm={12} md={6} lg={3} className="d-flex flex-column  flex-md-row gap-3 justify-content-start align-items-center">
+                <div className="d-flex flex-column">
                     <Tooltip
                         tooltipText="Send Data Interval (seconds)"
                     >
@@ -47,7 +47,7 @@ const SensorItem = (props: Props) => {
                     </Tooltip>
                 </div>
 
-                <div>
+                <div className="d-flex flex-column gap-1">
                     <Badge bg="danger" className="">
                         <i className="bi bi-thermometer-sun me-2" /> When temp below: {sensor.config.temperatureLimits.heating}  °C
                     </Badge>
@@ -58,7 +58,7 @@ const SensorItem = (props: Props) => {
                 </div>
             </Col>
 
-            <Col lg={5} className="d-flex gap-3 flex-row justify-content-end align-items-center">
+            <Col sm={12} md={2} lg={5} className="d-flex gap-3 flex-row justify-content-center justify-content-md-end align-items-center">
                 <Button
                     variant="warning"
                     onClick={() => {
@@ -67,7 +67,7 @@ const SensorItem = (props: Props) => {
                     }}
                 >
                     <i className="bi bi-pencil-fill" />
-                    <span className="ms-1">Edit</span>
+                    <span className="d-none d-lg-block ms-1">Edit</span>
                 </Button>
                 <Button
                     variant="danger"
@@ -77,7 +77,7 @@ const SensorItem = (props: Props) => {
                     }}
                 >
                     <i className="bi bi-trash" />
-                    <span className="ms-1">Delete</span>
+                    <span className="d-none d-lg-block ms-1">Delete</span>
                 </Button>
             </Col>
         </Row>

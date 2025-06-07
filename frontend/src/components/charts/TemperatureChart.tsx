@@ -8,13 +8,12 @@ import dayjs from "dayjs";
 interface Props {
     data: SensorDataInfluxOutput;
     showStats?: boolean; // Optional prop to control stats display
+    customDateFormat?: string,
 }
 const TemperatureChart = (props: Props) => {
-    const { data, showStats } = props;
+    const { data, showStats, customDateFormat = "DD.MM.YY HH:mm" } = props;
 
-
-
-    if(data.sensorData.length < 1) {
+    if (data.sensorData.length < 1) {
         return (
             <div className="text-center">
                 <p>No data available for the sensor.</p>
@@ -37,17 +36,16 @@ const TemperatureChart = (props: Props) => {
     const statistics = {
         min: data.sensorData[0],
         max: data.sensorData[0],
-        average: data.averageTemperature ?? "---",
+        average: data.averageTemperature?.toFixed(1) ?? "---",
     }
 
     interface DataPoint {
-        date: string;
         timeStamp: number;
         temperature: number;
         state: SensorState;
     }
     // Format the data for Recharts
-    const formattedData: DataPoint[] = (data.sensorData ?? sampleData).map((entry) => {
+    const formattedData: DataPoint[] = data.sensorData.map((entry) => {
         if (showStats) {
             if (entry.temperature < statistics.min.temperature) {
                 statistics.min = entry;
@@ -57,22 +55,17 @@ const TemperatureChart = (props: Props) => {
             }
         }
 
-
-        // console.log("entry: ", entry);
-        return {
-            ...entry,
-            timeStamp: entry.timeStamp, // Convert to milliseconds};
-        };
+        return entry;
     });
 
-    console.log("formattedData: ", formattedData);
+    // console.log("formattedData: ", formattedData);
 
     // Custom dot renderer to change the color based on state
     const renderCustomDot = (props: any) => {
         const { cx, cy, payload } = props;
         const color = stateColors[payload.state as SensorState]; // Get the color based on state
         return (
-            <circle cx={cx} cy={cy} r={5} fill={color} stroke="none" />
+            <circle cx={cx} cy={cy} r={4} fill={color} stroke="none" />
         );
     };
 
@@ -93,7 +86,7 @@ const TemperatureChart = (props: Props) => {
                     }}
                 >
                     <p style={{ margin: 0 }}>
-                        <strong>Date:</strong> {dataPoint.date}
+                        <strong>Date:</strong> {dayjs.unix(dataPoint.timeStamp).format("DD.MM.YYYY HH:mm")}
                     </p>
                     <p style={{ margin: 0 }}>
                         <strong>Temperature:</strong> {dataPoint.temperature}°C
@@ -115,13 +108,14 @@ const TemperatureChart = (props: Props) => {
                     <XAxis
                         dataKey="timeStamp"
                         dy={15}
-                        // scale="time"
+                        scale="time"
                         // type="number"
-                        tickFormatter={(val: number) => dayjs.unix(val).format("DD.MM.YYYY HH:mm")}
+                        tickFormatter={(val: number) => dayjs.unix(val).format(customDateFormat)}
                     />
                     <YAxis domain={[-10, 50]} label={{ value: "°C", position: "insideLeft" }} /> {/* Add °C label */}
                     <Tooltip content={renderCustomTooltip} />
                     <Line
+                        key={data.sensorId}
                         type="monotone"
                         dataKey="temperature"
                         stroke="#8884d8"

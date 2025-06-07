@@ -76,7 +76,7 @@ const SensorAddUpdateModal = (props: Props) => {
 
         setIsLoading(true);
         try {
-            const result = await sensorRequests.addSensor({
+            const requestBody = {
                 measurementPointId: mpId,
                 name: sensorObject.name,
                 quantity: sensorObject.quantity as MeasuredQuantity,
@@ -87,8 +87,16 @@ const SensorAddUpdateModal = (props: Props) => {
                         cooling: sensorObject.cooling,
                         heating: sensorObject.heating
                     }
-                }
-            })
+                },
+            }
+            const result = (modalVersion === "add-sensor")
+                ? await sensorRequests.addSensor(requestBody)
+                : await sensorRequests.updateSensor({
+                    ...requestBody,
+                    sensorId: sensor?.sensorId as string,
+                })
+
+            console.log("Sensor add/update result: ", result.sensors);
             if (result) {
                 setModalVersion("");
                 setAlerts([]);

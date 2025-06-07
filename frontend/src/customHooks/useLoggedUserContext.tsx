@@ -74,7 +74,7 @@ export const UserProvider: FC<{ children: ReactNode }> = ({ children }) => {
             fetchUserData(userId);
             return;
         }
-        redirect("/login")
+        redirect("/")
 
     }, [userData]);
 

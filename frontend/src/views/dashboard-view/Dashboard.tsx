@@ -171,14 +171,14 @@ const Dashboard = () => {
                     </Row>
                 )}
 
-                <Row className="mt-4">
-                    <Col sm={9}>
-                        <h2>Measurement Points</h2>
-                        {isLoading && (
-                            <Spinner animation="border" variant="primary" />
-                        )}
-                    </Col>
-                    <Col sm={3} className="d-flex justify-content-end align-items-start">
+                <Row className="mt-4 mb-1">
+                    <Col sm={12} className="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <h2>Measurement Points</h2>
+                            {isLoading && (
+                                <Spinner animation="border" variant="primary" />
+                            )}
+                        </div>
                         <Button
                             variant="success"
                             onClick={() => setModalVersion('add-measurement-point')}
@@ -187,18 +187,16 @@ const Dashboard = () => {
                             <span className="ms-1">Add Measurement Point</span>
                         </Button>
                     </Col>
-
-                    <Col sm={12} className="d-flex flex-column gap-3">
-                        {measurementPoints.map((measurementPoint) => (
-                            <MeasurementPointCard
-                                key={measurementPoint._id}
-                                measurementPoint={measurementPoint}
-                                setModalVersion={setModalVersion}
-                                setEditedMeasurementPoint={setEditedMeasurementPoint}
-                            />
-                        ))}
-                    </Col>
                 </Row>
+
+                {measurementPoints.map((measurementPoint) => (
+                    <MeasurementPointCard
+                        key={measurementPoint._id}
+                        measurementPoint={measurementPoint}
+                        setModalVersion={setModalVersion}
+                        setEditedMeasurementPoint={setEditedMeasurementPoint}
+                    />
+                ))}
 
             </Container >
         </>

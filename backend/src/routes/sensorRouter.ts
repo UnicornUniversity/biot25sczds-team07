@@ -53,7 +53,7 @@ sensorRouter.get(
                 return;
             }
 
-            const sensor = measurementPoint.sensors.find((sen: Sensor) => sen.sensorId === sensorId);
+            const sensor = measurementPoint.sensors.find((sen: Sensor) => sen.sensorId === sensorId && !sen.deleted);
             if (!sensor) {
                 res.status(404).json({ errorMap: { ...req.errorMap, ["404"]: `Sensor with this sensorId: ${sensorId} was not found.` } });
                 return;
@@ -136,8 +136,9 @@ sensorRouter.post(
                 {
                     projection: { jwtToken: 0 }
                 },
-            );
+            ) as MeasurementPoint;
 
+            measurementPointUpdated.sensors = measurementPointUpdated.sensors.filter((sensor) => !sensor.deleted);
             res.status(200).json({ ...measurementPointUpdated, errorMap: req.errorMap });
             return;
         } catch (error) {
@@ -188,7 +189,7 @@ sensorRouter.post(
                 return;
             }
 
-        
+
             const newSensors = [...measurementPoint.sensors];
             const updatedSensor = newSensors[sensorIndex];
             if (name) { updatedSensor.name = name }
@@ -199,7 +200,7 @@ sensorRouter.post(
                     res.status(404).json({ errorMap: req.errorMap });
                     return;
                 }
-    
+
                 updatedSensor.config = {
                     ...config,
                     created: dayjs().unix()
@@ -224,8 +225,8 @@ sensorRouter.post(
                     {
                         projection: { jwtToken: 0 }
                     },
-                );
-                measurementPoint.sensors = measurementPoint.sensors.filter((sensor) => !sensor.deleted);
+                ) as MeasurementPoint;
+                measurementPointUpdated.sensors = measurementPointUpdated.sensors.filter((sensor) => !sensor.deleted);
                 res.status(200).json({ ...measurementPointUpdated, errorMap: req.errorMap });
                 return;
             }

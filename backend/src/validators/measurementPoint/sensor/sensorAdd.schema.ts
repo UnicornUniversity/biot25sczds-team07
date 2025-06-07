@@ -22,9 +22,9 @@ export const addSensorScheme: JSONSchemaType<AddSensor> = {
         },
         name: {
             type: 'string',
-            minLength: 5,
+            minLength: 2,
             errorMessage: {
-                minLength: `${VALIDATION_ERRORS.MIN_LENGTH} 5`,
+                minLength: `${VALIDATION_ERRORS.MIN_LENGTH} 2`,
                 type: `${VALIDATION_ERRORS.TYPE} String`,
             },
         },
